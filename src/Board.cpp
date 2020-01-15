@@ -7,10 +7,10 @@ void Object::draw(const Pos& pos) {
 }
 
 
-Tile::Tile() : m_root(std::make_unique<BaseNode>(nullptr)){ }
+Tile::Tile() : m_root(std::make_unique<BaseNode>(*this)){ }
 
-void Tile::draw() {
-	m_root->forEach(&Object::draw, m_pos);
+void Tile::draw(const Pos& pos) {
+	m_root->forEach(&Object::draw, pos);
 }
 
 void Tile::link(
@@ -33,12 +33,11 @@ const Tile_p& Board::getTile(const Pos& pos) {
 
 void Board::draw() {
 	for(const auto& itr : m_map) {
-		itr.second->draw();
+		itr.second->draw(itr.first);
 	}
 }
 
 void Board::setTile(const Pos& pos, const Tile_p& tile) {
-	tile->setPos(pos);
 	m_map[pos] = tile;
 	for(const Pos& d : Directions) {
 		Pos p = pos + d;

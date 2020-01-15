@@ -26,8 +26,8 @@ class Node {
 public:
 	Node() = default;
 	Node(const Obj_p& obj) : m_obj{obj}{}
-	const Tile_p& getTile() const {
-		if(m_tile) return m_tile;
+	const Tile& getTile() const {
+		if(m_tile) return *m_tile;
 		return m_next->getTile();
 	}
 	template<typename FN_t, typename ... Args>
@@ -48,11 +48,11 @@ public:
 		}
 	}
 protected:
-	void setTile(const Tile_p& tile) { m_tile = tile; }
+	Node(Tile& tile) : m_tile(&tile) {}
 private:
 	std::shared_ptr<Object> m_obj {nullptr};
 	std::unique_ptr<Node> m_next {nullptr};
-	Tile_p  m_tile{nullptr};
+	Tile* m_tile {nullptr};
 };
 
 
@@ -76,24 +76,12 @@ private:
 class Tile {
 	class BaseNode : public Node {
 	public:
-		BaseNode(const Tile_p& tile) {
-			Node::setTile(tile);
-		}
-		void setTile(const Tile_p& tile) {
-			Node::setTile(tile);
-		}
+		BaseNode(Tile& tile) : Node(tile){ }
 	};
-	friend void Board::setTile(const Pos& pos, const Tile_p& tile);
-	void setPos(const Pos& pos) { m_pos = pos; }	
 public:
 	Tile();
 	~Tile() {}
-	void setSelf(const Tile_p& self) { 
-		if(m_self) throw std::string("try to set self again");
-		m_self = self; 
-		m_root->setTile(self);
-	}
-	virtual void draw(); 
+	virtual void draw(const Pos& pos); 
 	static void link(
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
 		);
@@ -101,9 +89,7 @@ public:
 		m_root->add(obj);	
 	}
 private:
-	Pos m_pos;
 	std::unique_ptr<BaseNode> m_root = nullptr;
-	Tile_p m_self;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,
 		nullptr,nullptr,nullptr,

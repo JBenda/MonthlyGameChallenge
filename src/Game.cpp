@@ -13,7 +13,6 @@ bool Game::running() {
 
 Game::Game() : m_board(std::make_unique<Board>()){
 	Tile_p tile = std::make_shared<Tile>();
-	tile->setSelf(tile);
 	m_board->setTile({0,0}, tile);
 	auto obj = std::make_shared<Object>();
 	m_board->setObject({0,0}, obj);
