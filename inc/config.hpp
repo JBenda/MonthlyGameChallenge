@@ -1,2 +1,129 @@
 #pragma once
 
+#include <array>
+#include <chrono>
+#include <initializer_list>
+#include <type_traits>
+
+constexpr float FrameDuration = 1.f / 60.f;
+constexpr float MaxTimeFrame = 0.25f;
+
+enum class LAYER { Background, Object };
+enum class OBJECT { Figure };
+
+template<typename T, std::size_t N>
+struct Vec : public std::array<T,N>{
+	template<typename ... Ns>
+	constexpr Vec(Ns ... ns) : std::array<T,N>{{ns...}}{}
+	Vec<T,N>& operator+=(Vec<T,N>& v) {
+		for(std::size_t i = 0; i < N; ++i) {
+			*this[i] += v[i];
+		}
+		return *this;
+	}
+	Vec<T,N>& operator-=(const Vec<T,N>& v) {
+		for(std::size_t i = 0; i < N; ++i) {
+			*this[i] -= v[i];
+		}
+		return *this;
+	}
+	Vec<T,N>& operator*=(const Vec<T,N>& s) {
+		for(std::size_t i = 0; i < N; ++i) {
+			*this[i] *= s;
+		}
+		return *this;
+	}
+	constexpr Vec<T,N> operator+(const Vec<T,N>& v) const {
+		Vec<T,N> res = *this;
+		add(res, v);
+		return res;
+	}
+	constexpr Vec<T,N> operator-(const Vec<T,N>& v) const {
+		Vec<T,N> res;
+		sub(res, v);
+		return res;
+	}
+	constexpr Vec<T,N> operator*(T s) const {
+		Vec<T,N> res;
+		scal(res, s);
+		return res;
+	}
+
+	std::string str() const {
+		std::string res = "[";
+		for(std::size_t i = 0; i < N; ++i) {
+			if(i != 0) { res += ','; }
+			res += std::to_string(this->at(i))	;
+		}	
+	}
+private:
+	template<std::size_t I = N-1>
+	constexpr void add(Vec<T,N>& r, const Vec<T,N>& v) const {
+		std::get<I>(r) += std::get<I>(v);
+		if constexpr (I>0) {
+			add<I-1>(r,v);
+		}
+	}
+	template<std::size_t I = N-1>
+	constexpr void sub(Vec<T,N>& r, const Vec<T,N>& v) const {
+		std::get<I>(r) -= std::get<I>(v);
+		if constexpr (I>0) {
+			sub<I-1>(r,v);
+		}
+	}
+	template<std::size_t I = N-1>
+	constexpr void scal(Vec<T,N>& r, T s) const {
+		std::get<I>(r) *= s;
+		if constexpr (I>0) {
+			scal<I-1>(r,s);
+		}
+	}
+};
+
+template<typename T, std::size_t N>
+struct std::hash<Vec<T,N>> {
+	std::size_t operator()(const Vec<T,N>& vec)	const {
+		std::size_t hash = 0;
+		for(std::size_t i = 0; i < N; ++i) {
+			hash += std::hash<T>()(vec[i]);
+		}
+		return std::hash<std::size_t>()(hash);
+	}
+};
+
+using Pos = Vec<int, 2>;
+
+class NeighborsC {
+public:
+	/**
+	 *	@brief maps neighbors to numbers 0to8.
+	 *	0 1 2 
+	 *	3 - 5  <- 4 = self
+	 *	6 7 8
+	 */
+	static constexpr std::size_t toId(const Pos& pos) {
+		return pos[0] + pos[0] * 3 + 4;
+	}
+	static constexpr std::size_t mirrow(std::size_t id) {
+		return 8 - id;
+	}
+	static constexpr Pos up = {0,-1};
+	static constexpr Pos left = {-1,0};
+	static constexpr Pos right= {1,0} ;
+	static constexpr Pos down = {0,-1};
+	static auto begin() { return m_pos.begin();}
+	static auto end() { return m_pos.end();}
+private:
+	static constexpr std::array<Pos,8> m_pos
+		= {{
+			up,
+			left,
+			right,
+			down,
+			up + left,
+			up + right,
+			down + left,
+			down + right
+		}};
+};
+constexpr NeighborsC Directions{};

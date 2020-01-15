@@ -5,120 +5,108 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <optional>
 
 #include "config.hpp"
 
-
-template<typename T, std::size_t N>
-struct Vec : public std::array<T,N>{
-	Vec<T,N>& operator+=(Vec<T,N>& v) {
-		for(std::size_t i = 0; i < N; ++i) {
-			*this[i] += v[i];
-		}
-		return *this;
-	}
-	Vec<T,N>& operator-=(Vec<T,N>& v) {
-		for(std::size_t i = 0; i < N; ++i) {
-			*this[i] -= v[i];
-		}
-		return *this;
-	}
-	Vec<T,N>& operator*=(Vec<T,N>& s) {
-		for(std::size_t i = 0; i < N; ++i) {
-			*this[i] *= s;
-		}
-		return *this;
-	}
-	Vec<T,N> operator+(Vec<T,N>& v) const {
-		Vec<T,N> res;
-		for(std::size_t i = 0; i < N; ++i) {
-			res[i] = *this[i] + v[i]; 
-		}
-	}
-	Vec<T,N> operator-(Vec<T,N>& v) const {
-		Vec<T,N> res;
-		for(std::size_t i = 0; i < N; ++i) {
-			res[i] = *this[i] + v[i];
-		}
-	}
-	Vec<T,N> operator*(T s) const {
-		Vec<T,N> res;
-		for(std::size_t i = 0; i < N; ++i) {
-			res[i] = *this[i] * s;
-		}
-	}
-
-	std::string str() const {
-		std::string res = "[";
-		for(std::size_t i = 0; i < N; ++i) {
-			if(i != 0) { res += ','; }
-			res += std::to_string(*this[i])	;
-		}	
-	}
-};
-
-template<typename T, std::size_t N>
-class std::hash<Vec<T,N>> {
-	
-};
-
-using Pos = Vec<int16_t, 2>;
-
 class Object {
-	virtual void onChangePos(
-			const Pos oPos,
-			const Pos nPos) {}
 public:
-	virtual void draw() const;
-	void setPos(const Pos pos) {
-		onChangePos(m_pos, pos);
-		m_pos = pos;
+	virtual void draw(const Pos& pos);
+private:
+	LAYER m_layer;
+	OBJECT m_objT;
+	std::size_t m_power;
+};
+using Obj_p = std::shared_ptr<Object>;
+
+class Tile;
+using Tile_p = std::shared_ptr<Tile>;
+
+class Node {
+public:
+	Node() = default;
+	Node(const Obj_p& obj) : m_obj{obj}{}
+	const Tile_p& getTile() const {
+		if(m_tile) return m_tile;
+		return m_next->getTile();
 	}
-	const Pos& getPos() const {
-		return m_pos;
+	template<typename FN_t, typename ... Args>
+	void forEach(FN_t fn, Args ... args) {
+			if (m_obj) {
+				((*m_obj).*fn)(std::forward<Args>(args)...);
+			}
+			if(m_next) {
+				m_next->forEach(std::forward<FN_t>(fn), 
+						std::forward<Args>(args)...);
+			}	
+	}
+	void add(const Obj_p& obj) {
+		if(m_next) { 
+			m_next->add(obj);
+		} else {
+			m_next = std::make_unique<Node>(obj);
+		}
+	}
+protected:
+	void setTile(const Tile_p& tile) { m_tile = tile; }
+private:
+	std::shared_ptr<Object> m_obj {nullptr};
+	std::unique_ptr<Node> m_next {nullptr};
+	Tile_p  m_tile{nullptr};
+};
+
+
+
+class Board {
+	using Map_t = std::unordered_map<Pos, std::shared_ptr<Tile>>;
+	void rewrite(const Pos& pos, const Tile_p& tile);
+	/*
+	 * @brief return Tile pointer or nullptr 
+	 */
+	const Tile_p* getTileEx(const Pos& pos);
+public:
+	void setTile(const Pos& pos, const Tile_p& tile);
+	const Tile_p& getTile(const Pos& pos);
+	void setObject(const Pos& pos, const Obj_p& obj);
+	void draw();
+private:
+	Map_t m_map;
+};
+
+class Tile {
+	class BaseNode : public Node {
+	public:
+		BaseNode(const Tile_p& tile) {
+			Node::setTile(tile);
+		}
+		void setTile(const Tile_p& tile) {
+			Node::setTile(tile);
+		}
+	};
+	friend void Board::setTile(const Pos& pos, const Tile_p& tile);
+	void setPos(const Pos& pos) { m_pos = pos; }	
+public:
+	Tile();
+	~Tile() {}
+	void setSelf(const Tile_p& self) { 
+		if(m_self) throw std::string("try to set self again");
+		m_self = self; 
+		m_root->setTile(self);
+	}
+	virtual void draw(); 
+	static void link(
+			const Pos& dir, const Tile_p& from, const Tile_p& to 
+		);
+	void addObject(const Obj_p& obj) {
+		m_root->add(obj);	
 	}
 private:
 	Pos m_pos;
-};
-using obj_ptr = std::shared_ptr<Object>;
-using obj_ref = const obj_ptr&;
-
-class Tile {
-	virtual void onEnter(obj_ref obj) { }
-public:
-	void addObject(obj_ref obj) {
-		onEnter(obj);
-		m_objs.emplace_back(obj);
-	}
-private:
-	std::vector<obj_ptr> m_objs;
-};
-
-class Board {
-	using Map_t =
-		std::unordered_map<Pos, std::shared_ptr<Tile>>;
-
-protected:
-	Tile& getTile(const Pos& pos) {
-		auto itr = m_map->find(pos);
-		if(itr != m_map.end()) return itr->second;
-		throw std::string("Try access not existing tile");
-	}
-
-public:
-	void setObject(
-			const Pos pos,
-			obj_ref obj) {
-		getTile(pos).addObject(obj);
-	}
-	void setTile(
-			const Pos pos,
-			const Tile& tile){
-		if(!m_map->emplace(tile).second) {
-			throw std::string("Tile: ") + pos.str() + " already tiled.";
-		}
-	}
-
-private:
-	Map_t m_map;
+	std::unique_ptr<BaseNode> m_root = nullptr;
+	Tile_p m_self;
+	std::array<Tile_p, 9> m_neighbors = {
+		nullptr,nullptr,nullptr,
+		nullptr,nullptr,nullptr,
+		nullptr,nullptr,nullptr
+	};
 };

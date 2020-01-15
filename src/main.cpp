@@ -4,31 +4,49 @@
 #include <chrono>
 #include <thread>
 
-#include "Board.hpp"
+#include "config.hpp"
+#include "Game.hpp"
 
-enum struct STATES { room, exit };
+enum struct STATES { Input, Animation, Calculation, Exit };
 
 int main(int argc, char *argv[])
 {
-	initscr();
+	WINDOW* wnd = initscr();
 	noecho();
 	curs_set(FALSE);
 
-	STATES state = STATES::room;
+	Game game{};
+	using Clock = std::chrono::steady_clock;
+	std::chrono::time_point<Clock> now;
+	std::chrono::time_point<Clock> last;
+	last = Clock::now();
 
-	while (state != STATES::exit) {
-		clear();
-		switch (state) {
-			case STATES::room:
-	
-				break;
-			default:
-					std::cout << "EXIT\n";
-				break;
+	const std::chrono::duration<float> dt{FrameDuration};
+	const std::chrono::duration<float> maxTime{MaxTimeFrame};
+
+	std::chrono::duration<float> accumulator;
+	while (game.running()) {
+		now = Clock::now();
+		std::chrono::duration<float> frameTime = now - last;
+		last = now;
+		if(frameTime > maxTime) {
+			frameTime = maxTime;
+		} 
+
+		accumulator += frameTime;
+
+		bool changes = false;
+		while( accumulator > (dt / 2.f) ) {
+			changes = true;
+			game.update(dt);
+			accumulator -= dt;
 		}
-		refresh();
+		if (changes) {
+			clear();
+			game.draw();
+			refresh();
+		}
 	}
-
 	std::chrono::milliseconds timespan(1000);
 	std::this_thread::sleep_for(timespan);
 	endwin();
