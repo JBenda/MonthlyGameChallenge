@@ -4,6 +4,43 @@
 #include <chrono>
 #include <initializer_list>
 #include <type_traits>
+#include <memory>
+#include <unordered_map>
+#include <ncurses.h>
+
+template<>
+struct std::hash<std::pair<short,short>> {
+	std::size_t operator()(const std::pair<short,short>& value) const {
+		const std::hash<short> hash{};
+		return std::hash<std::size_t>()(hash(value.first) + hash(value.second));
+	}
+};
+class Glob {
+public:
+	static Glob& instance() {
+		if (!m_instance) {
+			m_instance = std::unique_ptr<Glob>(new Glob());
+		}
+		return *m_instance;
+	}
+	/// managed color attribute ids
+	int GetColorAttrib(short fg, short bg) {
+		auto itr = m_colorPairs.find({fg,bg});
+		if (itr == m_colorPairs.end()) {
+			short pid = static_cast<short>(m_colorPairs.size()) + 1;
+			init_pair(pid, fg, bg);
+			itr = m_colorPairs.insert(std::pair<std::pair<short, short>,short>(
+				{fg,bg}, pid)).first;
+		}
+		return COLOR_PAIR(itr->second);
+	}
+private:
+	Glob() = default;
+	static std::unique_ptr<Glob> m_instance;
+	std::unordered_map<std::pair<short,short>,short> m_colorPairs;
+};
+
+
 
 constexpr float FrameDuration = 1.f / 60.f;
 constexpr float MaxTimeFrame = 0.25f;

@@ -8,10 +8,17 @@
 #include "Game.hpp"
 
 enum struct STATES { Input, Animation, Calculation, Exit };
+std::unique_ptr<Glob> Glob::m_instance{nullptr};
 
 int main(int argc, char *argv[])
 {
 	WINDOW* wnd = initscr();
+
+	if (has_colors() == FALSE) {
+		std::cerr << "You're terminal don't support colors, sorry\n";
+	}
+	start_color();
+
 	noecho();
 	curs_set(FALSE);
 
@@ -35,6 +42,8 @@ int main(int argc, char *argv[])
 
 		accumulator += frameTime;
 
+		init_color(COLOR_BLACK, 0,0,0);
+
 		bool changes = false;
 		while( accumulator > (dt / 2.f) ) {
 			changes = true;
@@ -42,7 +51,7 @@ int main(int argc, char *argv[])
 			accumulator -= dt;
 		}
 		if (changes) {
-			clear();
+			// clear();
 			game.draw();
 			refresh();
 		}

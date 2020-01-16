@@ -81,14 +81,20 @@ class Tile {
 public:
 	Tile();
 	~Tile() {}
-	virtual void draw(const Pos& pos); 
+	void draw(const Pos& pos); 
 	static void link(
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
 		);
 	void addObject(const Obj_p& obj) {
 		m_root->add(obj);	
 	}
+protected:
+	const Pos& getDimensions() { 
+		static constexpr Pos dim(6,3);
+		return dim;
+	}
 private:
+	virtual void drawSelf(const Pos& pos){}
 	std::unique_ptr<BaseNode> m_root = nullptr;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,

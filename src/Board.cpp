@@ -3,13 +3,14 @@
 #include <functional>
 
 void Object::draw(const Pos& pos) {
-	mvprintw(0,0, "Hello  \uE29883 :) %d,%d", pos[0], pos[1]);
+	// mvprintw(0,0, "Hello  \uE29883 :) %d,%d", pos[0], pos[1]);
 }
 
 
 Tile::Tile() : m_root(std::make_unique<BaseNode>(*this)){ }
 
 void Tile::draw(const Pos& pos) {
+	drawSelf(pos);
 	m_root->forEach(&Object::draw, pos);
 }
 
