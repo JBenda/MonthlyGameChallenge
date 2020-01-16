@@ -1,5 +1,4 @@
 #include "Board.hpp"
-#include <ncurses.h> 
 #include <functional>
 
 void Object::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {

@@ -1,7 +1,6 @@
 #include "Game.hpp"
 #include "Tiles.hpp"
 #include "Figures.hpp"
-#include <ncurses.h>
 #include <array>
 #include <string_view>
 

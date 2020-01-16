@@ -6,7 +6,9 @@
 #include <type_traits>
 #include <memory>
 #include <unordered_map>
-#include <ncurses.h>
+
+#define NCURSES_MOUSE_VERSION
+#include <curses.h>
 
 
 template<>
@@ -93,6 +95,7 @@ struct Vec : public std::array<T,N>{
 			if(i != 0) { res += ','; }
 			res += std::to_string(this->at(i))	;
 		}	
+		return res;
 	}
 private:
 	template<std::size_t I = N-1>

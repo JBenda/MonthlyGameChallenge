@@ -1,4 +1,3 @@
-#include <ncurses.h>
 
 #include <iostream>
 #include <chrono>
@@ -44,7 +43,7 @@ int main(int argc, char *argv[])
 		const std::chrono::duration<float> dt{FrameDuration};
 		const std::chrono::duration<float> maxTime{MaxTimeFrame};
 
-		std::chrono::duration<float> accumulator;
+		std::chrono::duration<float> accumulator(0);
 		Msg msg{};
 		while (game.running()) {
 			now = Clock::now();
@@ -56,11 +55,6 @@ int main(int argc, char *argv[])
 
 			accumulator += frameTime;
 
-			msgQueue.fetchEvents(wnd);
-			/*
-			while(msgQueue.pop(msg)) {	
-				game.input(msg);
-			}*/
 
 			bool changes = false;
 			while( accumulator > (dt / 2.f) ) {
@@ -71,12 +65,19 @@ int main(int argc, char *argv[])
 			if (changes) {
 				// clear();
 				game.draw();
+				msgQueue.fetchEvents( wnd );
+				while(msgQueue.pop(msg)) {	
+					game.input(msg);
+				}
 			}
+
 		}
 	} catch ( const std::string& msg) {
 		mvprintw(0,0,"Error: %s", msg.c_str());	
 		refresh();
 	}
+	mvprintw(0,0, "EXIT");
+	refresh();
 	std::chrono::milliseconds timespan(1000);
 	std::this_thread::sleep_for(timespan);
 	endwin();

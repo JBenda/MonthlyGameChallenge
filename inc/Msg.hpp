@@ -37,7 +37,7 @@ public:
 			if (std::type_index(m_value.type()) != std::type_index(typeid(T))) {
 				throw std::string("type mismatch");
 			}
-			return std::any_cast<const T*>(m_value);
+			return std::any_cast<T>(&m_value);
 		}
 		return nullptr;
 	} 
@@ -64,10 +64,9 @@ public:
 	}
 	void fetchEvents(WINDOW* wnd) {
 		std::optional<Msg> msg = std::nullopt;
-		wgetch(wnd);
-		/*while((msg = Msg::read(wnd))) {
+		while((msg = Msg::read(wnd))) {
 			m_msgs.push(msg.value());
-		}*/
+		}
 		
 	}
 private:
