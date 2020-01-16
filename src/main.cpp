@@ -6,6 +6,7 @@
 
 #include "config.hpp"
 #include "Game.hpp"
+#include "Msg.hpp"
 
 enum struct STATES { Input, Animation, Calculation, Exit };
 std::unique_ptr<Glob> Glob::m_instance{nullptr};
@@ -20,41 +21,61 @@ int main(int argc, char *argv[])
 	start_color();
 
 	noecho();
+	cbreak();
+	keypad(wnd, TRUE);
+	nonl();
+	intrflush(wnd, FALSE);
+	nodelay(wnd, TRUE);
 	curs_set(FALSE);
+	mousemask(BUTTON1_CLICKED, nullptr);
 
-	Game game{};
-	using Clock = std::chrono::steady_clock;
-	std::chrono::time_point<Clock> now;
-	std::chrono::time_point<Clock> last;
-	last = Clock::now();
+	init_color(COLOR_BLACK, 0,0,0);
 
-	const std::chrono::duration<float> dt{FrameDuration};
-	const std::chrono::duration<float> maxTime{MaxTimeFrame};
+	MsgQueue msgQueue{};
 
-	std::chrono::duration<float> accumulator;
-	while (game.running()) {
-		now = Clock::now();
-		std::chrono::duration<float> frameTime = now - last;
-		last = now;
-		if(frameTime > maxTime) {
-			frameTime = maxTime;
-		} 
+	try {
+		Game game(wnd);
 
-		accumulator += frameTime;
+		using Clock = std::chrono::steady_clock;
+		std::chrono::time_point<Clock> now;
+		std::chrono::time_point<Clock> last;
+		last = Clock::now();
 
-		init_color(COLOR_BLACK, 0,0,0);
+		const std::chrono::duration<float> dt{FrameDuration};
+		const std::chrono::duration<float> maxTime{MaxTimeFrame};
 
-		bool changes = false;
-		while( accumulator > (dt / 2.f) ) {
-			changes = true;
-			game.update(dt);
-			accumulator -= dt;
+		std::chrono::duration<float> accumulator;
+		Msg msg{};
+		while (game.running()) {
+			now = Clock::now();
+			std::chrono::duration<float> frameTime = now - last;
+			last = now;
+			if(frameTime > maxTime) {
+				frameTime = maxTime;
+			} 
+
+			accumulator += frameTime;
+
+			msgQueue.fetchEvents(wnd);
+			/*
+			while(msgQueue.pop(msg)) {	
+				game.input(msg);
+			}*/
+
+			bool changes = false;
+			while( accumulator > (dt / 2.f) ) {
+				changes = true;
+				game.update(dt);
+				accumulator -= dt;
+			}
+			if (changes) {
+				// clear();
+				game.draw();
+			}
 		}
-		if (changes) {
-			// clear();
-			game.draw();
-			refresh();
-		}
+	} catch ( const std::string& msg) {
+		mvprintw(0,0,"Error: %s", msg.c_str());	
+		refresh();
 	}
 	std::chrono::milliseconds timespan(1000);
 	std::this_thread::sleep_for(timespan);

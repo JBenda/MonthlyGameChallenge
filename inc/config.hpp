@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <ncurses.h>
 
+
 template<>
 struct std::hash<std::pair<short,short>> {
 	std::size_t operator()(const std::pair<short,short>& value) const {
@@ -164,3 +165,9 @@ private:
 		}};
 };
 constexpr NeighborsC Directions{};
+
+inline Pos getWndSize(WINDOW* wnd) {
+	Pos wndSize;
+	getmaxyx(wnd, wndSize[1], wndSize[0]);
+	return wndSize;
+}

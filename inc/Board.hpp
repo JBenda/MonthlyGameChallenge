@@ -11,7 +11,7 @@
 
 class Object {
 public:
-	virtual void draw(const Pos& pos, const Pos& size);
+	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
 private:
 	LAYER m_layer;
 	OBJECT m_objT;
@@ -65,15 +65,16 @@ class Board {
 	 */
 	const Tile_p* getTileEx(const Pos& pos);
 public:
+	Board(const Pos& tileSize);
 	void setTileSize(const Pos& size) { m_tileSize = size; }
 	const Pos& getTileSize() { return m_tileSize; }
 	void setTile(const Pos& pos, const Tile_p& tile);
 	Tile& getTile(const Pos& pos);
 	void setObject(const Pos& pos, const Obj_p& obj);
-	void draw();
+	void draw(WINDOW* wnd);
 private:
 	Map_t m_map;
-	Pos m_tileSize{6,3};
+	Pos m_tileSize;
 };
 
 class Tile {
@@ -84,7 +85,7 @@ class Tile {
 public:
 	Tile();
 	~Tile() {}
-	void draw(const Pos& pos, const Pos& size); 
+	void draw(WINDOW* wnd, const Pos& pos, const Pos& size); 
 	static void link(
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
 		);
@@ -92,7 +93,7 @@ public:
 		m_root->add(obj);	
 	}
 private:
-	virtual void drawSelf(const Pos& pos, const Pos& size){}
+	virtual void drawSelf(WINDOW* wnd, const Pos& pos, const Pos& size){}
 	std::unique_ptr<BaseNode> m_root = nullptr;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,

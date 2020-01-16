@@ -34,21 +34,35 @@ void loadMap(Board& board) {
 		}
 	}
 
-	board.getTile({4,4}).addObject(std::make_shared<Pawn>());
 }
 
 void Game::draw() {
-	m_board->draw();
+	m_board->draw(m_boardWnd);
+	wrefresh(m_wnd);
 }
 
 void Game::update(const std::chrono::duration<float>& dt) {}
 
 bool Game::running() { 
-	return true;
+	return !m_exit;
 }
 
-Game::Game() : m_board(std::make_unique<Board>()){
+constexpr Pos TileSize{6,3};
+
+Game::Game(WINDOW* wnd) : m_exit(false), m_board(std::make_unique<Board>(TileSize)), m_wnd{wnd}{
+	const Pos wndSize = getWndSize(wnd);
+	if(wndSize[0] < 6*9 + 10 || wndSize[1] < 3*9+10) throw std::string("Window to small");
+	m_boardWnd = subwin(m_wnd, 3*9,6*9, 10, 10); 
 	loadMap(*m_board);
-	auto obj = std::make_shared<Object>();
-	m_board->setObject({0,0}, obj);
+
+	m_board->getTile({4,4}).addObject(std::make_shared<Pawn>());
+}
+
+void Game::input(const Msg& msg) {
+	if(const int* key = msg.fetch<int>(MsgTypes::Key)) {
+		if (*key == 'q') {
+			m_exit = true;
+		}
+	}
+	// TODO: distribute to sub elements
 }
