@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Tiles.hpp"
+#include "Figures.hpp"
 #include <ncurses.h>
 #include <array>
 #include <string_view>
@@ -32,6 +33,8 @@ void loadMap(Board& board) {
 			board.setTile({x,y}, tile);
 		}
 	}
+
+	board.getTile({4,4}).addObject(std::make_shared<Pawn>());
 }
 
 void Game::draw() {

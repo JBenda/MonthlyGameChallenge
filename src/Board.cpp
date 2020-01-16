@@ -2,16 +2,15 @@
 #include <ncurses.h> 
 #include <functional>
 
-void Object::draw(const Pos& pos) {
-	// mvprintw(0,0, "Hello  \uE29883 :) %d,%d", pos[0], pos[1]);
+void Object::draw(const Pos& pos, const Pos& size) {
 }
 
 
 Tile::Tile() : m_root(std::make_unique<BaseNode>(*this)){ }
 
-void Tile::draw(const Pos& pos) {
-	drawSelf(pos);
-	m_root->forEach(&Object::draw, pos);
+void Tile::draw(const Pos& pos, const Pos& size) {
+	drawSelf(pos, size);
+	m_root->forEach(&Object::draw, pos, size);
 }
 
 void Tile::link(
@@ -26,15 +25,17 @@ const Tile_p* Board::getTileEx(const Pos& pos) {
 	return &(itr->second);
 }
 
-const Tile_p& Board::getTile(const Pos& pos) {
+Tile& Board::getTile(const Pos& pos) {
 	const Tile_p* ptr = getTileEx(pos);
 	if(!ptr) throw std::string("Try to access not existing Tile: ") + pos.str();
-	return *ptr;
+	return *(*ptr);
 }
 
 void Board::draw() {
 	for(const auto& itr : m_map) {
-		itr.second->draw(itr.first);
+		itr.second->draw(
+			{itr.first[0] * m_tileSize[0], itr.first[1] * m_tileSize[1]},
+			m_tileSize);
 	}
 }
 
@@ -50,5 +51,5 @@ void Board::setTile(const Pos& pos, const Tile_p& tile) {
 }
 
 void Board::setObject(const Pos& pos, const Obj_p& obj) {
-	getTile(pos)->addObject(obj);	
+	getTile(pos).addObject(obj);	
 }
