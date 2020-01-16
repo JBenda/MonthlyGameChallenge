@@ -1,6 +1,7 @@
 #include "Game.hpp"
 #include "Tiles.hpp"
 #include "Figures.hpp"
+#include "Layer.hpp"
 #include <array>
 #include <string_view>
 
@@ -48,19 +49,25 @@ bool Game::running() {
 
 constexpr Pos TileSize{6,3};
 
-Game::Game(WINDOW* wnd) : m_exit(false), m_board(std::make_unique<Board>(TileSize)), m_wnd{wnd}{
+Game::Game(WINDOW* wnd) : 
+	m_exit(false), 
+	m_board(std::make_unique<Board>(TileSize)), 
+	m_wnd{wnd},
+	m_selector{ std::make_shared<Selected>() }{
 	const Pos wndSize = getWndSize(wnd);
 	if(wndSize[0] < 6*9 + 10 || wndSize[1] < 3*9+10) throw std::string("Window to small");
 	m_boardWnd = subwin(m_wnd, 3*9,6*9, 10, 10); 
 	loadMap(*m_board);
 
 	m_board->getTile({4,4}).addObject(std::make_shared<Pawn>());
+	m_board->getTile( { 1,1 } ).addObject( m_selector );
 }
 
 void Game::input(const Msg& msg) {
 	if(const int* key = msg.fetch<int>(MsgTypes::Key)) {
 		if (*key == 'q') {
 			m_exit = true;
+		} else if ( *key == KEY_LEFT ) {
 		}
 	}
 	// TODO: distribute to sub elements

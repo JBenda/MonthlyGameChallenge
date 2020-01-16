@@ -48,8 +48,8 @@ private:
 constexpr float FrameDuration = 1.f / 60.f;
 constexpr float MaxTimeFrame = 0.25f;
 
-enum class LAYER { Background, Object };
-enum class OBJECT { Figure };
+enum class LAYER { Background, Highlight, Object };
+enum class OBJECT { Figure, Highlight };
 
 template<typename T, std::size_t N>
 struct Vec : public std::array<T,N>{

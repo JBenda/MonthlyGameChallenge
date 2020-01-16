@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Board.hpp"
+#include "Layer.hpp"
 #include "Msg.hpp"
 
 class Game {
@@ -18,4 +19,5 @@ private:
 	std::unique_ptr<Board> m_board;
 	WINDOW* m_wnd{nullptr};
 	WINDOW* m_boardWnd{nullptr};
+	std::shared_ptr<Selected> m_selector{nullptr};
 };

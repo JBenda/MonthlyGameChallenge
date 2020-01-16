@@ -55,3 +55,7 @@ void Board::setTile(const Pos& pos, const Tile_p& tile) {
 void Board::setObject(const Pos& pos, const Obj_p& obj) {
 	getTile(pos).addObject(obj);	
 }
+
+ Tile_p Tile::getNeighbor( const Pos& dir ) {
+	 m_neighbors[NeighborsC::toId( dir )];
+}

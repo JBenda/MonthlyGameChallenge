@@ -29,9 +29,11 @@ int main(int argc, char *argv[])
 	mousemask(BUTTON1_CLICKED, nullptr);
 
 	init_color(COLOR_BLACK, 0,0,0);
+	init_color( COLOR_BLUE, 678, 847, 902 );
 
 	MsgQueue msgQueue{};
 
+	bool closeNormal = true;
 	try {
 		Game game(wnd);
 
@@ -73,13 +75,14 @@ int main(int argc, char *argv[])
 
 		}
 	} catch ( const std::string& msg) {
+		closeNormal = false;
 		mvprintw(0,0,"Error: %s", msg.c_str());	
 		refresh();
 	}
-	mvprintw(0,0, "EXIT");
-	refresh();
-	std::chrono::milliseconds timespan(1000);
-	std::this_thread::sleep_for(timespan);
+	if ( !closeNormal ) {
+		std::chrono::milliseconds timespan( 1000 );
+		std::this_thread::sleep_for( timespan );
+	}
 	endwin();
 	return 0;
 }

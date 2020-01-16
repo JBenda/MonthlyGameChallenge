@@ -9,13 +9,17 @@
 
 #include "config.hpp"
 
+class Tile;
 class Object {
 public:
 	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
+protected:
+	Object() = default;
+	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
 private:
 	LAYER m_layer;
 	OBJECT m_objT;
-	std::size_t m_power;
+	std::size_t m_power{0};
 };
 using Obj_p = std::shared_ptr<Object>;
 
@@ -92,6 +96,7 @@ public:
 	void addObject(const Obj_p& obj) {
 		m_root->add(obj);	
 	}
+	Tile_p getNeighbor( const Pos& dir);
 private:
 	virtual void drawSelf(WINDOW* wnd, const Pos& pos, const Pos& size){}
 	std::unique_ptr<BaseNode> m_root = nullptr;
