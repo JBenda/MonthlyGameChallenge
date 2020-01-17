@@ -45,11 +45,11 @@ private:
 
 
 
-constexpr float FrameDuration = 1.f / 60.f;
-constexpr float MaxTimeFrame = 0.25f;
+constexpr float FrameDuration = 1.f / 10.f;
+constexpr float MaxTimeFrame = 0.5f;
 
-enum class LAYER { Background, Highlight, Object };
-enum class OBJECT { Figure, Highlight };
+enum class LAYER { None, Background, Highlight, Object };
+enum class OBJECT { None, Figure, Highlight };
 
 template<typename T, std::size_t N>
 struct Vec : public std::array<T,N>{
@@ -143,7 +143,7 @@ public:
 	 *	6 7 8
 	 */
 	static constexpr std::size_t toId(const Pos& pos) {
-		return pos[0] + pos[0] * 3 + 4;
+		return pos[0] + pos[1] * 3 + 4;
 	}
 	static constexpr std::size_t mirrow(std::size_t id) {
 		return 8 - id;
@@ -151,7 +151,7 @@ public:
 	static constexpr Pos up = {0,-1};
 	static constexpr Pos left = {-1,0};
 	static constexpr Pos right= {1,0} ;
-	static constexpr Pos down = {0,-1};
+	static constexpr Pos down = {0,1};
 	static auto begin() { return m_pos.begin();}
 	static auto end() { return m_pos.end();}
 private:

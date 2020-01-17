@@ -5,11 +5,12 @@ void Object::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 }
 
 
-Tile::Tile() : m_root(std::make_unique<BaseNode>(*this)){ }
+Tile::Tile() : m_self(Tile_p(this)){ }
 
 void Tile::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
-	drawSelf(wnd, pos, size);
-	m_root->forEach(&Object::draw, wnd, pos, size);
+	for( const Obj_p& obj : m_objs) {
+		obj->draw(wnd, pos, size);
+	}
 }
 
 void Tile::link(
@@ -18,11 +19,18 @@ void Tile::link(
 	to->m_neighbors[Directions.mirrow(Directions.toId(dir))] = from;
 }
 
+void Tile::addObject(const Obj_p& obj) {
+	m_objs.push_back(obj);
+	obj->setTile(m_self);
+}
+
 const Tile_p* Board::getTileEx(const Pos& pos) {
 	auto itr = m_map.find(pos);
 	if (itr == m_map.end()) { return nullptr; }
 	return &(itr->second);
 }
+
+
 
 Board::Board(const Pos& pos) : m_tileSize(pos){}
 
@@ -52,10 +60,35 @@ void Board::setTile(const Pos& pos, const Tile_p& tile) {
 	}
 }
 
-void Board::setObject(const Pos& pos, const Obj_p& obj) {
-	getTile(pos).addObject(obj);	
+
+ const Tile_p& Tile::getNeighbor( const Pos& dir ) {
+	 return m_neighbors[Directions.toId( dir )];
 }
 
- Tile_p Tile::getNeighbor( const Pos& dir ) {
-	 m_neighbors[NeighborsC::toId( dir )];
+void Tile::removeObject(const Obj_p& obj) {
+	for(auto itr = m_objs.begin(); itr != m_objs.end(); ++itr) {
+		if (*itr == obj) {
+			m_objs.erase(itr);
+			return;
+		}
+	}
+	throw std::string("can't remove Object, it don't exist at this place");
+}
+
+void Board::tryMove(const Obj_p& obj, const Pos& dir) {
+	const Tile_p& tile = obj->getTile();
+	if(!tile) throw std::string("object has no Tile! But should move?");
+	const Tile_p&  target = tile->getNeighbor(dir);
+	if(target) {
+		tile->removeObject(obj);
+		target->addObject(obj);		
+	}
+}
+
+void Board::moveOrOut(const Obj_p& obj, const Pos& dir) {
+	const Tile_p& tile = obj->getTile();
+	tryMove(obj, dir);
+	if (obj->getTile() == tile) {
+		tile->removeObject(obj);
+	}
 }

@@ -1,5 +1,4 @@
 #include "Game.hpp"
-#include "Tiles.hpp"
 #include "Figures.hpp"
 #include "Layer.hpp"
 #include <array>
@@ -18,16 +17,16 @@ constexpr std::array<std::string_view, 20> Alphs = {
 void loadMap(Board& board) {
 	for(int x = 0; x < 9; ++x) {
 		for(int y = 0; y < 9; ++y) {
-			std::shared_ptr<Tile> tile(nullptr);
+			Tile_p tile = (new Tile())->self();
 			if (x == 0) { // left border
-				tile = std::make_shared<LabelTile>(Nums[y]);
+				tile->addObject(std::make_shared<BgLabel>(Nums[y]));
 			} else if (y == 0) { // right border
-				tile = std::make_shared<LabelTile>(Alphs[x]);
+				tile->addObject(std::make_shared<BgLabel>(Alphs[x]));
 			} else { // field
 				if ((x+y) % 2) {
-					tile = std::make_shared<BlackTile>();
+					tile->addObject(std::make_shared<BgColor>(COLOR_BLACK));
 				} else {
-					tile = std::make_shared<WhiteTile>();
+					tile->addObject(std::make_shared<BgColor>(COLOR_WHITE));
 				}
 			}
 			board.setTile({x,y}, tile);
@@ -38,7 +37,8 @@ void loadMap(Board& board) {
 
 void Game::draw() {
 	m_board->draw(m_boardWnd);
-	wrefresh(m_wnd);
+	wnoutrefresh(m_boardWnd);
+	wnoutrefresh(m_wnd);
 }
 
 void Game::update(const std::chrono::duration<float>& dt) {}
@@ -67,8 +67,16 @@ void Game::input(const Msg& msg) {
 	if(const int* key = msg.fetch<int>(MsgTypes::Key)) {
 		if (*key == 'q') {
 			m_exit = true;
-		} else if ( *key == KEY_LEFT ) {
+		} else if ( *key == KEY_RIGHT ) {
+			Board::tryMove(m_selector, Directions.right);
+		} else if (*key == KEY_LEFT) {
+			Board::tryMove(m_selector, Directions.left);
+		} else if ( *key == KEY_UP) {
+			Board::tryMove(m_selector, Directions.up);
+		} else if ( *key == KEY_DOWN) {
+			Board::tryMove(m_selector, Directions.down);
 		}
+
 	}
 	// TODO: distribute to sub elements
 }

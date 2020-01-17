@@ -65,12 +65,12 @@ int main(int argc, char *argv[])
 				accumulator -= dt;
 			}
 			if (changes) {
-				// clear();
-				game.draw();
 				msgQueue.fetchEvents( wnd );
 				while(msgQueue.pop(msg)) {	
 					game.input(msg);
 				}
+				game.draw();
+				doupdate();
 			}
 
 		}
