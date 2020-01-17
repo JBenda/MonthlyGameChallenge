@@ -1,5 +1,6 @@
 #include "Board.hpp"
 #include <functional>
+#include <algorithm>
 
 void Object::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 }
@@ -20,7 +21,9 @@ void Tile::link(
 }
 
 void Tile::addObject(const Obj_p& obj) {
-	m_objs.push_back(obj);
+	if(!m_objs.insert(obj).second) {
+		throw std::string("layer collision!");
+	}
 	obj->setTile(m_self);
 }
 
@@ -63,6 +66,11 @@ void Board::setTile(const Pos& pos, const Tile_p& tile) {
 
  const Tile_p& Tile::getNeighbor( const Pos& dir ) {
 	 return m_neighbors[Directions.toId( dir )];
+}
+
+bool Object::less::operator()(const Obj_p& l_h, const Obj_p& r_h) {
+	return static_cast<int>(l_h->m_layer ) 
+		< static_cast<int>(r_h->m_layer);
 }
 
 void Tile::removeObject(const Obj_p& obj) {

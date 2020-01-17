@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #define NCURSES_MOUSE_VERSION
+#define _XOPEN_SOURCE_EXTENDED 1
 #include <curses.h>
 
 
@@ -137,7 +138,7 @@ using Pos = Vec<int, 2>;
 class NeighborsC {
 public:
 	/**
-	 *	@brief maps neighbors to numbers 0to8.
+	 *	@brief maps neighbors to numbers 0 to 8.
 	 *	0 1 2 
 	 *	3 - 5  <- 4 = self
 	 *	6 7 8

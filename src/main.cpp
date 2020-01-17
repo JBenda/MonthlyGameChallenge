@@ -3,6 +3,8 @@
 #include <chrono>
 #include <thread>
 
+#include <locale.h>
+
 #include "config.hpp"
 #include "Game.hpp"
 #include "Msg.hpp"
@@ -12,6 +14,8 @@ std::unique_ptr<Glob> Glob::m_instance{nullptr};
 
 int main(int argc, char *argv[])
 {
+	setlocale(LC_ALL, "");
+
 	WINDOW* wnd = initscr();
 
 	if (has_colors() == FALSE) {
@@ -70,6 +74,8 @@ int main(int argc, char *argv[])
 					game.input(msg);
 				}
 				game.draw();
+				printw("€\n"); 
+				wnoutrefresh(wnd);
 				doupdate();
 			}
 

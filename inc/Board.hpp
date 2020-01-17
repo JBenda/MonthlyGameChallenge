@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <array>
 #include <memory>
-#include <vector>
+#include <set>
 #include <string>
 #include <optional>
 
@@ -39,6 +39,27 @@ private:
 	Pos m_tileSize;
 };
 
+class Object {
+	friend class Tile;
+	friend class Board;
+	void setTile(const Tile_p& tile) {
+		m_tile = tile;
+	}
+	Tile_p getTile() const { return m_tile.lock(); }
+public:
+	struct less {
+		bool operator() (const Obj_p& l_h, const Obj_p& r_h); 
+	};
+	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
+protected:
+	Object() = default;
+	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
+private:
+	LAYER m_layer {LAYER::None};
+	OBJECT m_objT {OBJECT::None};
+	std::weak_ptr<Tile> m_tile {};
+	std::size_t m_power{0};
+};
 class Tile {
 public:
 	Tile();
@@ -53,7 +74,7 @@ public:
 	const Tile_p& getNeighbor( const Pos& dir);
 private:
 	Tile_p m_self;
-	std::vector<Obj_p> m_objs;
+	std::set<Obj_p, Object::less> m_objs;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,
 		nullptr,nullptr,nullptr,
@@ -61,21 +82,3 @@ private:
 	};
 };
 
-class Object {
-	friend void Tile::addObject(const Obj_p&);
-	friend class Board;
-	void setTile(const Tile_p& tile) {
-		m_tile = tile;
-	}
-	Tile_p getTile() const { return m_tile.lock(); }
-public:
-	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
-protected:
-	Object() = default;
-	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
-private:
-	LAYER m_layer {LAYER::None};
-	OBJECT m_objT {OBJECT::None};
-	std::weak_ptr<Tile> m_tile {};
-	std::size_t m_power{0};
-};
