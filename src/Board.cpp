@@ -68,7 +68,7 @@ void Board::setTile(const Pos& pos, const Tile_p& tile) {
 	 return m_neighbors[Directions.toId( dir )];
 }
 
-bool Object::less::operator()(const Obj_p& l_h, const Obj_p& r_h) {
+bool Object::less::operator()(const Obj_p& l_h, const Obj_p& r_h) const {
 	return static_cast<int>(l_h->m_layer ) 
 		< static_cast<int>(r_h->m_layer);
 }

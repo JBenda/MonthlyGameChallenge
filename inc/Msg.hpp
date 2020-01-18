@@ -8,7 +8,7 @@
 
 #include "config.hpp"
 
-enum struct MsgTypes { Key, LeftClick };
+enum struct MsgTypes { None, Key, LeftClick };
 
 class Msg {
 public:
@@ -51,7 +51,7 @@ private:
 	template<typename T>
 	Msg(MsgTypes type, T value) : m_msgType(type), m_value(value){}
 	std::any m_value;
-	MsgTypes m_msgType;
+	MsgTypes m_msgType{MsgTypes::None};
 };
 
 class MsgQueue {

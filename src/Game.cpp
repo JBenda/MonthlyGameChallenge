@@ -56,7 +56,7 @@ Game::Game(WINDOW* wnd) :
 	m_selector{ std::make_shared<Selected>() }{
 	const Pos wndSize = getWndSize(wnd);
 	if(wndSize[0] < 6*9 + 10 || wndSize[1] < 3*9+10) throw std::string("Window to small");
-	m_boardWnd = subwin(m_wnd, 3*9,6*9, 10, 10); 
+	m_boardWnd = subwin(m_wnd, TileSize[1]*9,TileSize[0]*9, 5, 10); 
 	loadMap(*m_board);
 
 	m_board->getTile({4,4}).addObject(std::make_shared<Pawn>());

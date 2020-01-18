@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <type_traits>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 #define NCURSES_MOUSE_VERSION

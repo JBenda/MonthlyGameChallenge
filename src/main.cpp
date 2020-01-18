@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	}
 	start_color();
 
-	noecho();
+	// noecho();
 	cbreak();
 	keypad(wnd, TRUE);
 	nonl();
@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
 					game.input(msg);
 				}
 				game.draw();
-				printw("€\n"); 
 				wnoutrefresh(wnd);
 				doupdate();
 			}

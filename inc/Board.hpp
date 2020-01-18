@@ -48,7 +48,7 @@ class Object {
 	Tile_p getTile() const { return m_tile.lock(); }
 public:
 	struct less {
-		bool operator() (const Obj_p& l_h, const Obj_p& r_h); 
+		bool operator() (const Obj_p& l_h, const Obj_p& r_h) const; 
 	};
 	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
 protected:
