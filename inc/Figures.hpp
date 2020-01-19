@@ -8,7 +8,9 @@ class Figure : public Object{
 public:
 	Figure() : Object{LAYER::Object, OBJECT::Figure}{}
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
+	const std::vector<Tile_w>& getMovments();
 protected:
+
 	class PrintIterator;
 	using PrintArea = std::pair<PrintIterator, PrintIterator>;
 	class PrintIterator {
@@ -33,10 +35,14 @@ protected:
 	};
 private:
 	virtual PrintArea getPrint( int const height ) = 0;
+	virtual void setMovments( std::vector<Tile_w>& movList ) const = 0;
+	std::vector<Tile_w> m_targets;
 };
 
 class Pawn : public Figure {
 public:
 private:
+	void setMovments( std::vector<Tile_w>& movList ) const override;
 	PrintArea getPrint( const int height ) ;
 };
+

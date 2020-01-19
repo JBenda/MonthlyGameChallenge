@@ -15,19 +15,6 @@ void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 	wattroff( wnd, format );
 }
 
-Figure::PrintArea Pawn::getPrint( const int height ) {
-	if ( height > 5 ) {
-		static const char8_t p[] =
-			u8"()\0"
-			u8")(\0"
-			u8"/__\\\0"
-			u8"";
-		return PrintIterator::fromPrint( { p, sizeof( p ) } );
-
-	}
-	return PrintIterator::fromPrint(u8"\u2659");
-}
-
 Figure::PrintArea Figure::PrintIterator::fromPrint( const std::u8string_view& print ) {
 	return std::make_pair(PrintIterator(print), PrintIterator());
 }
@@ -48,3 +35,33 @@ Figure::PrintIterator& Figure::PrintIterator::operator++() {
 	++m_lvl;
 	return *this;
 }
+
+const std::vector<Tile_w>& Figure::getMovments() {
+	m_targets.resize( 0 );
+	setMovments( m_targets );
+	return m_targets;
+}
+
+void Pawn::setMovments( std::vector<Tile_w>& moves ) const {
+	{
+		const Tile_p& next = getTile()->getNeighbor( Directions.up );
+		STEPS step = next->tryMove( *this );
+		if ( isSet( step, STEPS::YES ) && !isSet( step, STEPS::BLOCKING ) ) {
+			moves.push_back( next );
+		}
+	}
+}
+
+Figure::PrintArea Pawn::getPrint( const int height ) {
+	if ( height > 5 ) {
+		static const char8_t p[] =
+			u8"()\0"
+			u8")(\0"
+			u8"/__\\\0"
+			u8"";
+		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+
+	}
+	return PrintIterator::fromPrint(u8"\u2659");
+}
+

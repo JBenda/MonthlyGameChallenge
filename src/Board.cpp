@@ -33,14 +33,19 @@ const Tile_p* Board::getTileEx(const Pos& pos) {
 	return &(itr->second);
 }
 
-
+STEPS Tile::tryMove( const Object& obj ) const {
+	Obj_w objOnTile = getObjet();
+	if ( objOnTile.expired() ) return STEPS::YES;
+	// TODO: get size and set block for this
+	return STEPS::NO;
+}
 
 Board::Board(const Pos& pos) : m_tileSize(pos){}
 
-Tile& Board::getTile(const Pos& pos) {
+const Tile_p& Board::getTile(const Pos& pos) {
 	const Tile_p* ptr = getTileEx(pos);
 	if(!ptr) throw std::string("Try to access not existing Tile: ") + pos.str();
-	return *(*ptr);
+	return *ptr;
 }
 
 void Board::draw(WINDOW* wnd) {
@@ -93,10 +98,27 @@ void Board::tryMove(const Obj_p& obj, const Pos& dir) {
 	}
 }
 
+void Board::move( const Obj_p& obj, Tile& tile ) {
+	const Tile_p& s_tile = obj->getTile();
+	if ( !s_tile ) throw std::string("obj has no tiel");
+	s_tile->removeObject( obj );
+	tile.addObject( obj );
+}
+
 void Board::moveOrOut(const Obj_p& obj, const Pos& dir) {
 	const Tile_p& tile = obj->getTile();
 	tryMove(obj, dir);
 	if (obj->getTile() == tile) {
 		tile->removeObject(obj);
 	}
+}
+
+const Obj_p& Tile::getLayer( const LAYER layer ) const {
+	for ( const Obj_p& obj : m_objs ) {
+		if ( obj->getLayer() == layer ) {
+			return obj;
+		}
+	}
+	static const Obj_p obj(nullptr);
+	return obj;
 }

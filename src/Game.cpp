@@ -41,28 +41,57 @@ void Game::draw() {
 	wnoutrefresh(m_wnd);
 }
 
-void Game::update(const std::chrono::duration<float>& dt) {}
+void Game::update(const std::chrono::duration<float>& dt) {
+}
 
 bool Game::running() { 
 	return !m_exit;
 }
 
-constexpr Pos TileSize{14,7};
 
 Game::Game(WINDOW* wnd) : 
 	m_exit(false), 
-	m_board(std::make_unique<Board>(TileSize)), 
 	m_wnd{wnd},
 	m_selector{ std::make_shared<Selected>() }{
 	const Pos wndSize = getWndSize(wnd);
-	if(wndSize[0] < TileSize[0]*9 + 10 || wndSize[1] < TileSize[1]*9+10) 
+	Pos tileSize( (wndSize[0] - 10) / 9, (wndSize[1] - 5) / 9);
+	for ( const Pos& size : SupportedTieldSizes ) {
+		if ( size[0] <= tileSize[0] && size[1] <= tileSize[1] ) {
+			tileSize = size;
+			break;
+		}
+	}
+	if(wndSize[0] < tileSize[0]*9 + 10 || wndSize[1] < tileSize[1]*9+10) 
 		throw std::string("Window to small");
 
-	m_boardWnd = subwin(m_wnd, TileSize[1]*9,TileSize[0]*9, 5, 10); 
+	m_boardWnd = subwin(m_wnd, tileSize[1]*9,tileSize[0]*9, 5, 10); 
+
+	m_board = std::make_unique<Board>(tileSize);
 	loadMap(*m_board);
 
-	m_board->getTile({4,4}).addObject(std::make_shared<Pawn>());
-	m_board->getTile( { 1,1 } ).addObject( m_selector );
+	m_board->getTile({4,4})->addObject(std::make_shared<Pawn>());
+	m_board->getTile( { 1,1 } )->addObject( m_selector );
+}
+
+void Game::flushSelectedFigure() {
+	m_seletedFigure.reset();
+	for ( const std::shared_ptr<Marked>& m : m_moves ) {
+		m->getTile()->removeObject( m );
+	}
+	m_moves.resize(0);
+}
+
+void Game::updateSelection() {
+	const Obj_p& obj = m_selector->getTile()->getObjet();
+	if ( obj && obj->getObjectType() == OBJECT::Figure ) {
+		flushSelectedFigure();
+		m_seletedFigure = std::static_pointer_cast<Figure>( obj );
+		const std::vector<Tile_w>& moves = m_seletedFigure->getMovments();
+		for ( const Tile_w& tile : moves ) {
+			m_moves.push_back( std::make_shared<Marked>() );
+			tile.lock()->addObject( m_moves.back() );
+		}
+	}
 }
 
 void Game::input(const Msg& msg) {
@@ -71,14 +100,43 @@ void Game::input(const Msg& msg) {
 			m_exit = true;
 		} else if ( *key == KEY_RIGHT ) {
 			Board::tryMove(m_selector, Directions.right);
+			updateSelection();
 		} else if (*key == KEY_LEFT) {
 			Board::tryMove(m_selector, Directions.left);
+			updateSelection();
 		} else if ( *key == KEY_UP) {
 			Board::tryMove(m_selector, Directions.up);
+			updateSelection();
 		} else if ( *key == KEY_DOWN) {
 			Board::tryMove(m_selector, Directions.down);
+			updateSelection();
+		} else if ( *key == '\r') {
+			if ( m_seletedFigure && tryMoveFigure( m_seletedFigure, m_selector->getTile() ) ) {
+				flushSelectedFigure();
+			} else if ( !m_seletedFigure ) {
+				updateSelection();
+			}
 		}
 
+	} else if ( const Pos* pos = msg.fetch<Pos>( MsgTypes::LeftClick ) ) {
+		Pos winPos = *pos - getWndPos( m_boardWnd );
+		Pos tileSize = m_board->getTileSize();
+		const Tile_p& tile = m_board->getTile( { winPos[0] / tileSize[0], winPos[1] / tileSize[1] } );
+		m_board->move( m_selector, *tile);
+		if ( m_seletedFigure && tryMoveFigure( m_seletedFigure, tile ) ) {
+			flushSelectedFigure();
+		} else {
+			updateSelection();
+		}
 	}
 	// TODO: distribute to sub elements
+}
+bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
+	for ( const std::shared_ptr<Marked>& mark : m_moves ) {
+		if ( mark->getTile() == tile ) {
+			m_board->move( fig, *tile );
+			return true;
+		}
+	}
+	return false;
 }

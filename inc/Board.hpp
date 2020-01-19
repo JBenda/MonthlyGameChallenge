@@ -9,11 +9,22 @@
 
 #include "config.hpp"
 
+constexpr std::array<Pos, 2> SupportedTieldSizes = { { {14,7}, {6,3} } };
+enum class STEPS { NO = 0, YES = 0b1, BLOCKING = 0b11};
+template<typename T>
+bool isSet( T config, T flag ) {
+	return (static_cast<unsigned int>( config ) & static_cast<unsigned int>( flag ))
+		== static_cast<unsigned int>(flag);
+
+}
+
 class Tile;
 using Tile_p = std::shared_ptr<Tile>;
+using Tile_w = std::weak_ptr<Tile>;
 
 class Object;
 using Obj_p = std::shared_ptr<Object>;
+using Obj_w = std::weak_ptr<Object>;
 
 class Board {
 	using Map_t = std::unordered_map<Pos, std::shared_ptr<Tile>>;
@@ -23,6 +34,7 @@ class Board {
 	 */
 	const Tile_p* getTileEx(const Pos& pos);
 public:
+	static void move(const Obj_p& obj, Tile& tile );
 	static void tryMove(const Obj_p& obj, const Pos& dir);
 	static void moveOrOut(const Obj_p& obj, const Pos& dir);
 	Board(const Pos& tileSize);
@@ -31,7 +43,7 @@ public:
 	const Pos& getTileSize() { return m_tileSize; }
 
 	void setTile(const Pos& pos, const Tile_p& tile);
-	Tile& getTile(const Pos& pos);
+	const Tile_p& getTile(const Pos& pos);
 
 	void draw(WINDOW* wnd);
 private:
@@ -45,12 +57,14 @@ class Object {
 	void setTile(const Tile_p& tile) {
 		m_tile = tile;
 	}
-	Tile_p getTile() const { return m_tile.lock(); }
 public:
 	struct less {
 		bool operator() (const Obj_p& l_h, const Obj_p& r_h) const; 
 	};
 	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
+	const Tile_p getTile() const { return std::move(m_tile.lock()); }
+	const LAYER getLayer(){ return m_layer;}
+	const OBJECT getObjectType() { return m_objT; }
 protected:
 	Object() = default;
 	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
@@ -64,7 +78,7 @@ class Tile {
 public:
 	Tile();
 	~Tile() {}
-	const Tile_p& self() { return m_self; }
+	Tile_p self() { return m_self; }
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size); 
 	static void link(
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
@@ -72,8 +86,11 @@ public:
 	void addObject(const Obj_p& obj) ;
 	void removeObject(const Obj_p& obj) ;
 	const Tile_p& getNeighbor( const Pos& dir);
+	const Obj_p& getLayer( const LAYER layer ) const;
+	const Obj_p& getObjet() const { return getLayer( LAYER::Object ); }
+	STEPS tryMove( const Object& obj ) const;
 private:
-	Tile_p m_self;
+	std::shared_ptr<Tile> m_self;
 	std::set<Obj_p, Object::less> m_objs;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,

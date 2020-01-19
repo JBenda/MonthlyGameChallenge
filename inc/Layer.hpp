@@ -9,6 +9,13 @@ public:
 	~Selected() = default;
 };
 
+class Marked : public Object {
+public:
+	void draw( WINDOW* wnd, const Pos& pos, const Pos& size ) override;
+	Marked() :
+		Object( LAYER::Marked, OBJECT::Highlight ) {}
+};
+
 class BgColor : public Object {
 public:
 	void draw( WINDOW* wnd, const Pos& pos, const Pos& size ) override;
@@ -19,6 +26,7 @@ public:
 private:
 	const int m_format;
 };
+
 
 class BgLabel : public Object {
 public:

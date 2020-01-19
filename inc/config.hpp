@@ -50,7 +50,7 @@ private:
 constexpr float FrameDuration = 1.f / 10.f;
 constexpr float MaxTimeFrame = 0.5f;
 
-enum class LAYER { None, Background, Highlight, Object };
+enum class LAYER { None, Background, Highlight, Marked, Object };
 enum class OBJECT { None, Figure, Highlight };
 
 template<typename T, std::size_t N>
@@ -81,12 +81,12 @@ struct Vec : public std::array<T,N>{
 		return res;
 	}
 	constexpr Vec<T,N> operator-(const Vec<T,N>& v) const {
-		Vec<T,N> res;
+		Vec<T,N> res = *this;
 		sub(res, v);
 		return res;
 	}
 	constexpr Vec<T,N> operator*(T s) const {
-		Vec<T,N> res;
+		Vec<T,N> res = *this;
 		scal(res, s);
 		return res;
 	}
@@ -170,6 +170,13 @@ private:
 		}};
 };
 constexpr NeighborsC Directions{};
+
+// position to paraent
+inline Pos getWndPos( WINDOW* wnd ) {
+	Pos wndPos;
+	getparyx( wnd, wndPos[1], wndPos[0] );
+	return wndPos;
+}
 
 inline Pos getWndSize(WINDOW* wnd) {
 	Pos wndSize;
