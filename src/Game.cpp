@@ -47,7 +47,7 @@ bool Game::running() {
 	return !m_exit;
 }
 
-constexpr Pos TileSize{6,3};
+constexpr Pos TileSize{14,7};
 
 Game::Game(WINDOW* wnd) : 
 	m_exit(false), 
@@ -55,7 +55,9 @@ Game::Game(WINDOW* wnd) :
 	m_wnd{wnd},
 	m_selector{ std::make_shared<Selected>() }{
 	const Pos wndSize = getWndSize(wnd);
-	if(wndSize[0] < 6*9 + 10 || wndSize[1] < 3*9+10) throw std::string("Window to small");
+	if(wndSize[0] < TileSize[0]*9 + 10 || wndSize[1] < TileSize[1]*9+10) 
+		throw std::string("Window to small");
+
 	m_boardWnd = subwin(m_wnd, TileSize[1]*9,TileSize[0]*9, 5, 10); 
 	loadMap(*m_board);
 

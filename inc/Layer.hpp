@@ -15,7 +15,7 @@ public:
 	BgColor(short color) : 
 		Object(LAYER::Background, 
 		OBJECT::Highlight ),
-		m_format(Glob::instance().GetColorAttrib(COLOR_YELLOW, color)){}
+		m_format(Glob::instance().GetColorAttrib(COLOR_GREEN, color)){}
 private:
 	const int m_format;
 };
