@@ -11,7 +11,11 @@
 #define NCURSES_MOUSE_VERSION
 #define _XOPEN_SOURCE_EXTENDED 1
 #include <curses.h>
+#include <string_view>
 
+namespace std {
+	using u8string_view = std::basic_string_view<char8_t>;
+}
 
 template<>
 struct std::hash<std::pair<short,short>> {

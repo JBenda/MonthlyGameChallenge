@@ -3,6 +3,8 @@
 #include "config.hpp"
 #include "Board.hpp"
 
+#include <vector>
+
 
 class Figure : public Object{
 public:

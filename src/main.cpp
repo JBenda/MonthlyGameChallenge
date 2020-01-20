@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	}
 	start_color();
 
-	// noecho();
+	noecho();
 	cbreak();
 	keypad(wnd, TRUE);
 	nonl();
