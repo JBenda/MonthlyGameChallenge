@@ -69,15 +69,16 @@ Game::Game(WINDOW* wnd) :
 	m_board = std::make_unique<Board>(tileSize);
 	loadMap(*m_board);
 
-	m_board->getTile({4,4})->addObject(std::make_shared<Pawn>());
-	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>() );
+	m_board->getTile({4,4})->addObject(std::make_shared<Pawn>(FRACTION::NORMAL));
+	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>(FRACTION::PLAYER) );
+	m_board->getTile({2,2})->addObject(std::make_shared<Pawn>(FRACTION::PLAYER));
 	m_board->getTile( { 1,1 } )->addObject( m_selector );
 }
 
 void Game::flushSelectedFigure() {
 	m_seletedFigure.reset();
 	for ( const std::shared_ptr<Marked>& m : m_moves ) {
-		m->getTile()->removeObject( m );
+		m->getTile()->removeObject( *m );
 	}
 	m_moves.resize(0);
 }
@@ -101,20 +102,32 @@ void Game::input(const Msg& msg) {
 			m_exit = true;
 		} else if ( *key == KEY_RIGHT ) {
 			Board::tryMove(m_selector, Directions.right);
-			updateSelection();
+			if ( !m_seletedFigure ) {
+				updateSelection();
+			}
 		} else if (*key == KEY_LEFT) {
 			Board::tryMove(m_selector, Directions.left);
-			updateSelection();
+			if ( !m_seletedFigure ) {
+				updateSelection();
+			}
 		} else if ( *key == KEY_UP) {
 			Board::tryMove(m_selector, Directions.up);
-			updateSelection();
+			if ( !m_seletedFigure ) {
+				updateSelection();
+			}
 		} else if ( *key == KEY_DOWN) {
 			Board::tryMove(m_selector, Directions.down);
-			updateSelection();
+			if ( !m_seletedFigure ) {
+				updateSelection();
+			}
 		} else if ( *key == '\r') {
-			if ( m_seletedFigure && tryMoveFigure( m_seletedFigure, m_selector->getTile() ) ) {
-				flushSelectedFigure();
-			} else if ( !m_seletedFigure ) {
+			if ( m_seletedFigure ) {
+				if ( tryMoveFigure( m_seletedFigure, m_selector->getTile() ) ) {
+					flushSelectedFigure();
+				} else {
+					updateSelection();
+				}
+			} else {
 				updateSelection();
 			}
 		}

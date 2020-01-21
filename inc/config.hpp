@@ -56,6 +56,7 @@ constexpr float MaxTimeFrame = 0.5f;
 
 enum class LAYER { None, Background, Highlight, Marked, Object };
 enum class OBJECT { None, Figure, Highlight };
+enum class FRACTION {PLAYER, NORMAL};
 
 template<typename T, std::size_t N>
 struct Vec : public std::array<T,N>{

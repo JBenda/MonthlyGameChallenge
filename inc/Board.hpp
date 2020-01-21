@@ -63,8 +63,9 @@ public:
 	};
 	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
 	const Tile_p getTile() const { return std::move(m_tile.lock()); }
-	const LAYER getLayer(){ return m_layer;}
-	const OBJECT getObjectType() { return m_objT; }
+	const LAYER getLayer() const { return m_layer;}
+	const OBJECT getObjectType() const { return m_objT; }
+	virtual void onCollision( const Obj_p& obj ) { throw std::string("no collision behavior defined!"); };
 protected:
 	Object() = default;
 	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
@@ -84,7 +85,7 @@ public:
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
 		);
 	void addObject(const Obj_p& obj) ;
-	void removeObject(const Obj_p& obj) ;
+	void removeObject(const Object& obj) ;
 	const Tile_p& getNeighbor( const Pos& dir);
 	const Obj_p& getLayer( const LAYER layer ) const;
 	const Obj_p& getObjet() const { return getLayer( LAYER::Object ); }
