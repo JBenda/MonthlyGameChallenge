@@ -70,6 +70,7 @@ Game::Game(WINDOW* wnd) :
 	loadMap(*m_board);
 
 	m_board->getTile({4,4})->addObject(std::make_shared<Pawn>());
+	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>() );
 	m_board->getTile( { 1,1 } )->addObject( m_selector );
 }
 

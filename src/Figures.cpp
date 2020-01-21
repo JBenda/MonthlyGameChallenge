@@ -55,8 +55,43 @@ void Pawn::setMovments( std::vector<Tile_w>& moves ) const {
 Figure::PrintArea Pawn::getPrint( const int height ) {
 	if ( height > 5 ) {
 		static const char8_t p[] =
-			u8"()\0"
-			u8")(\0"
+		 	 u8"()\0"
+			 u8")(\0"
+			u8"/__\\\0"
+			u8"";
+		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+
+	}
+	return PrintIterator::fromPrint(u8"\u2659");
+}
+
+void Bishop::setMovments( std::vector<Tile_w>& moveList ) const {
+	static constexpr std::array<Pos, 4> dirs = {
+		Directions.up + Directions.left,
+		Directions.up + Directions.right,
+		Directions.down + Directions.left,
+		Directions.down + Directions.right
+	};
+	for ( const auto& dir : dirs ) {
+		const Tile_p* next = &getTile()->getNeighbor( dir );
+		if ( !(*next) ) continue;
+		STEPS step = (*next)->tryMove( *this );
+		while ( isSet( step, STEPS::YES ) ) { 
+			moveList.push_back( *next );
+			if ( isSet( step, STEPS::BLOCKING ) ) break;
+			next = &((*next)->getNeighbor( dir ));
+			if ( !(*next) ) break;
+			step = ( *next )->tryMove( *this );
+		}
+	}
+}
+
+Figure::PrintArea Bishop::getPrint( const int height ) {
+	if ( height > 5 ) {
+		static const char8_t p[] =
+		 	 u8"()\0"
+			 u8")(\0"
+			 u8")(\0"
 			u8"/__\\\0"
 			u8"";
 		return PrintIterator::fromPrint( { p, sizeof( p ) } );

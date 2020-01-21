@@ -45,6 +45,13 @@ class Pawn : public Figure {
 public:
 private:
 	void setMovments( std::vector<Tile_w>& movList ) const override;
-	PrintArea getPrint( const int height ) ;
+	PrintArea getPrint( const int height );
+};
+
+class Bishop : public Figure {
+public:
+private:
+	void setMovments( std::vector<Tile_w>& movList ) const override;
+	PrintArea getPrint( const int height );
 };
 
