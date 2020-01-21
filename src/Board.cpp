@@ -1,4 +1,5 @@
 #include "Board.hpp"
+#include "Figures.hpp"
 #include <functional>
 #include <algorithm>
 
@@ -21,6 +22,10 @@ void Tile::link(
 }
 
 void Tile::addObject(const Obj_p& obj) {
+	auto itr = m_objs.find( obj );
+	if ( itr != m_objs.end() ) {
+		( *itr )->onCollision( obj );
+	}
 	if(!m_objs.insert(obj).second) {
 		throw std::string("layer collision!");
 	}
@@ -36,7 +41,13 @@ const Tile_p* Board::getTileEx(const Pos& pos) {
 STEPS Tile::tryMove( const Object& obj ) const {
 	Obj_w objOnTile = getObjet();
 	if ( objOnTile.expired() ) return STEPS::YES;
-	// TODO: get size and set block for this
+	const Object& objOnT = *( objOnTile.lock() );
+	if ( obj.getObjectType() == OBJECT::Figure
+		 && objOnT.getObjectType() == OBJECT::Figure) {
+		if ( static_cast<const Figure&>( obj ).getFraction() != static_cast<const Figure&>( objOnT ).getFraction() ) {
+			return STEPS::BLOCKING;
+		}
+	}
 	return STEPS::NO;
 }
 
@@ -78,10 +89,10 @@ bool Object::less::operator()(const Obj_p& l_h, const Obj_p& r_h) const {
 		< static_cast<int>(r_h->m_layer);
 }
 
-void Tile::removeObject(const Obj_p& obj) {
-	for(auto itr = m_objs.begin(); itr != m_objs.end(); ++itr) {
-		if (*itr == obj) {
-			m_objs.erase(itr);
+void Tile::removeObject( const Object& obj ) {
+	for ( auto itr = m_objs.begin(); itr != m_objs.end(); ++itr ) {
+		if ( itr->get() == &obj ) {
+			m_objs.erase( itr );
 			return;
 		}
 	}
@@ -93,7 +104,7 @@ void Board::tryMove(const Obj_p& obj, const Pos& dir) {
 	if(!tile) throw std::string("object has no Tile! But should move?");
 	const Tile_p&  target = tile->getNeighbor(dir);
 	if(target) {
-		tile->removeObject(obj);
+		tile->removeObject(*obj);
 		target->addObject(obj);		
 	}
 }
@@ -101,7 +112,7 @@ void Board::tryMove(const Obj_p& obj, const Pos& dir) {
 void Board::move( const Obj_p& obj, Tile& tile ) {
 	const Tile_p& s_tile = obj->getTile();
 	if ( !s_tile ) throw std::string("obj has no tiel");
-	s_tile->removeObject( obj );
+	s_tile->removeObject( *obj );
 	tile.addObject( obj );
 }
 
@@ -109,7 +120,7 @@ void Board::moveOrOut(const Obj_p& obj, const Pos& dir) {
 	const Tile_p& tile = obj->getTile();
 	tryMove(obj, dir);
 	if (obj->getTile() == tile) {
-		tile->removeObject(obj);
+		tile->removeObject(*obj);
 	}
 }
 

@@ -8,9 +8,11 @@
 
 class Figure : public Object{
 public:
-	Figure() : Object{LAYER::Object, OBJECT::Figure}{}
+	Figure( FRACTION fraction ) : Object{ LAYER::Object, OBJECT::Figure }, _fraction{fraction}{}
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
 	const std::vector<Tile_w>& getMovments();
+	FRACTION getFraction() const { return _fraction; }
+	void onCollision( const Obj_p& obj ) override;
 protected:
 
 	class PrintIterator;
@@ -38,11 +40,13 @@ protected:
 private:
 	virtual PrintArea getPrint( int const height ) = 0;
 	virtual void setMovments( std::vector<Tile_w>& movList ) const = 0;
-	std::vector<Tile_w> m_targets;
+	FRACTION _fraction{ FRACTION::NORMAL };
+	std::vector<Tile_w> m_targets{};
 };
 
 class Pawn : public Figure {
 public:
+	Pawn( FRACTION fraction ) : Figure( fraction ) {}
 private:
 	void setMovments( std::vector<Tile_w>& movList ) const override;
 	PrintArea getPrint( const int height );
@@ -50,6 +54,7 @@ private:
 
 class Bishop : public Figure {
 public:
+	Bishop( FRACTION fraction ) : Figure( fraction ) {}
 private:
 	void setMovments( std::vector<Tile_w>& movList ) const override;
 	PrintArea getPrint( const int height );
