@@ -98,6 +98,7 @@ bool Object::less::operator()(const Obj_p& l_h, const Obj_p& r_h) const {
 void Tile::removeObject( const Object& obj ) {
 	for ( auto itr = m_objs.begin(); itr != m_objs.end(); ++itr ) {
 		if ( itr->get() == &obj ) {
+			obj.setTile( {} );
 			m_objs.erase( itr );
 			return;
 		}
@@ -138,4 +139,15 @@ const Obj_p& Tile::getLayer( const LAYER layer ) const {
 	}
 	static const Obj_p obj(nullptr);
 	return obj;
+}
+
+void Tile::printInfo( WINDOW* wnd ) const {
+	werase( wnd );
+	box( wnd, '-', '|' );
+	const Obj_p& obj = getObjet();
+	Pos tl( 1, 1 );
+	Pos br = getWndSize( wnd ) - Pos( 1, 1 );
+	if ( obj ) {
+		tl = obj->printInfo( wnd, tl, br );
+	}
 }

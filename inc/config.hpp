@@ -63,9 +63,9 @@ template<typename T, std::size_t N>
 struct Vec : public std::array<T,N>{
 	template<typename ... Ns>
 	constexpr Vec(Ns ... ns) : std::array<T,N>{{ns...}}{}
-	Vec<T,N>& operator+=(Vec<T,N>& v) {
+	Vec<T,N>& operator+=(const Vec<T,N>& v) {
 		for(std::size_t i = 0; i < N; ++i) {
-			*this[i] += v[i];
+			(*this)[i] += v[i];
 		}
 		return *this;
 	}

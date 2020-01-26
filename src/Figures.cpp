@@ -64,27 +64,30 @@ void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 		prints.emplace_back(PrintIterator::fromPrint(power->getPrint(size)));
 	}
 	chtype input[28];
+	wchar_t symboles[28];
 	prints.emplace_back( PrintIterator::fromPrint( this->getPrint( size ) ) );
 	for ( const auto& area : prints ) {
 		for ( auto itr = area.first; itr != area.second; ++itr ) {
-			int len = 0;
-			for ( auto c : *itr ) {
-				if ( ( c & 0b1100'0000 ) != 0b1000'0000 ) {
-					++len;
+			if ( itr->size() > 0 ) {
+				int len = 0;
+				{
+					int off = 0;
+					wchar_t* c = symboles;
+					do {
+						off += PDC_mbtowc( c++, reinterpret_cast<const char*>( itr->data() ) + off, itr->size() - off );
+						++len;
+					} while ( off != itr->size());
+
 				}
-			}
-			if ( len > 0 ) {
 				int xOff = ( size[0] - len ) / 2;
 				wmove( wnd, pos[1] + size[1] - itr.level(), pos[0] + xOff );
 				winchnstr( wnd, input, len );
 				int off = 0;
 				for ( int i = 0; input[i] != 0; ++i) {
 					wchar_t c = 0;
-					off += PDC_mbtowc( &c, reinterpret_cast<const char*>( itr->data() + off ), itr->size() - off );
-					input[i] = ( input[i] & A_ATTRIBUTES ) | ( c & A_CHARTEXT );
+					input[i] = ( input[i] & A_ATTRIBUTES ) | ( symboles[i] & A_CHARTEXT );
 				}
 				waddchstr( wnd, input );
-				// waddstr( wnd, reinterpret_cast<const char*>(itr->data() ));
 			}
 		}
 	}
@@ -101,6 +104,22 @@ void Figure::removePowerUp( const Power_p& power ) {
 			return;
 		}
 	}
+}
+Pos Figure::printInfo( WINDOW* wnd, const Pos& tl, const Pos& br ) const {
+	Pos pos = tl;
+	wmove( wnd, pos[1], pos[0] );
+	wprintw( wnd, "Figure: %s", getName());
+	pos += Pos(2, 2);
+	wmove( wnd, pos[1], pos[0] );
+	wprintw( wnd, "Fraction: %s", getFractionName(getFraction()).data());
+	pos += Pos( 0, 2 );
+	wmove( wnd, pos[1], pos[0] );
+	waddstr( wnd, "Powers: " );
+	pos += Pos( 2, 2 );
+	for ( const auto& p : m_powerups ) {
+		pos = p->printInfo( wnd, pos, br );
+	}
+	return Pos( tl[0], pos[1] );
 }
 
 Figure::PrintArea Figure::PrintIterator::fromPrint( const std::u8string_view& print ) {
@@ -152,7 +171,7 @@ void Pawn::setMovments( std::vector<Tile_w>& moves ) const {
 	}
 }
 
-std::u8string_view Pawn::getPrint( const Pos& size ) {
+std::u8string_view Pawn::getPrint( const Pos& size ) const {
 	if ( size[1] > 5 ) {
 		static const char8_t p[] =
 		 	 u8"()\0"
@@ -191,7 +210,7 @@ void Bishop::setMovments( std::vector<Tile_w>& moveList ) const {
 	}
 }
 
-std::u8string_view Bishop::getPrint( const Pos& size ) {
+std::u8string_view Bishop::getPrint( const Pos& size ) const {
 	if ( size[1] > 5 ) {
 		static const char8_t p[] =
 		 	 u8"()\0"
@@ -211,3 +230,42 @@ std::u8string_view Bishop::getPrint( const Pos& size ) {
 	return u8"\u2657";
 }
 
+void King::setMovments( std::vector<Tile_w>& movList ) const {
+	static constexpr std::array<Pos, 8> dirs = {
+		Directions.up,
+		Directions.up + Directions.left,
+		Directions.left,
+		Directions.left + Directions.down,
+		Directions.down,
+		Directions.down + Directions.right,
+		Directions.right,
+		Directions.right + Directions.up
+	};
+	for ( const auto& dir : dirs ) {
+		const Tile_p* next = &getTile()->getNeighbor( dir );
+		if ( !( *next ) ) continue;
+		if ( isSet( ( *next )->tryMove( *this ), STEPS::YES ) ) {
+			movList.push_back( *next );
+		}
+	}
+}
+
+std::u8string_view King::getPrint( const Pos& size ) const {
+	if ( size[1] > 5 ) {
+		static const char8_t p[] =
+			u8"(+)\0"
+			u8")(\0"
+			u8")(\0"
+			u8"/__\\\0"
+			u8"";
+		return { p, sizeof( p ) };
+
+	}
+	if ( size[1] > 2 ) {
+		static const char8_t p[] =
+			u8"\u2654\0"
+			u8"";
+		return { p, sizeof( p ) };
+	}
+	return u8"\u2654";
+}

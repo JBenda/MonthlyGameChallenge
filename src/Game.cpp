@@ -38,7 +38,9 @@ void loadMap(Board& board) {
 
 void Game::draw() {
 	m_board->draw(m_boardWnd);
+	m_selector->getTile()->printInfo( m_infoWnd );
 	wnoutrefresh(m_boardWnd);
+	wnoutrefresh( m_infoWnd );
 	wnoutrefresh(m_wnd);
 }
 
@@ -62,10 +64,21 @@ Game::Game(WINDOW* wnd) :
 			break;
 		}
 	}
-	if(wndSize[0] < tileSize[0]*9 + 10 || wndSize[1] < tileSize[1]*9+10) 
+	if(wndSize[0] < tileSize[0]*9 || wndSize[1] < tileSize[1]*9) 
 		throw std::string("Window to small");
+	const Pos boardSize( 9,9);
+	const Pos boardWinSize( boardSize[0] * tileSize[0], boardSize[1] * tileSize[1] );
+	Pos infoWinSize, infoWinPos;
+	if ( wndSize[0] - boardWinSize[0] < 20 ) {
+		infoWinPos = { 0,0 };
+		infoWinSize = boardWinSize;
+	} else {
+		infoWinPos = { boardWinSize[0], 0 };
+		infoWinSize = { wndSize[0] - boardWinSize[0], boardWinSize[1] };
+	}
 
-	m_boardWnd = subwin(m_wnd, tileSize[1]*9,tileSize[0]*9, 5, 10); 
+	m_boardWnd = subwin(m_wnd, boardWinSize[1],boardWinSize[0], 0,0); 
+	m_infoWnd = subwin( m_wnd, infoWinSize[1], infoWinSize[0], infoWinPos[1], infoWinPos[0] );
 
 	m_board = std::make_unique<Board>(tileSize);
 	loadMap(*m_board);
@@ -75,6 +88,7 @@ Game::Game(WINDOW* wnd) :
 	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>(FRACTION::PLAYER) );
 	m_board->getTile({2,2})->addObject(std::make_shared<Pawn>(FRACTION::PLAYER));
 	m_board->getTile( { 1,1 } )->addObject( m_selector );
+	m_board->getTile( { 5,5 } )->addObject( std::make_shared<King>( FRACTION::PLAYER ) );
 }
 
 void Game::flushSelectedFigure() {
@@ -98,40 +112,45 @@ void Game::updateSelection() {
 	}
 }
 
+void Game::handleSelection() {
+	if ( m_seletedFigure ) {
+		if ( m_seletedFigure->getFraction() == FRACTION::PLAYER && tryMoveFigure( m_seletedFigure, m_selector->getTile() ) ) {
+			flushSelectedFigure();
+		} else {
+			flushSelectedFigure();
+			updateSelection();
+		}
+	} else {
+		updateSelection();
+	}
+}
+
 void Game::input(const Msg& msg) {
 	if(const int* key = msg.fetch<int>(MsgTypes::Key)) {
 		if (*key == 'q') {
 			m_exit = true;
 		} else if ( *key == KEY_RIGHT ) {
 			Board::tryMove(m_selector, Directions.right);
-			if ( !m_seletedFigure ) {
+			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if (*key == KEY_LEFT) {
 			Board::tryMove(m_selector, Directions.left);
-			if ( !m_seletedFigure ) {
+			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if ( *key == KEY_UP) {
 			Board::tryMove(m_selector, Directions.up);
-			if ( !m_seletedFigure ) {
+			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if ( *key == KEY_DOWN) {
 			Board::tryMove(m_selector, Directions.down);
-			if ( !m_seletedFigure ) {
+			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if ( *key == '\r') {
-			if ( m_seletedFigure ) {
-				if ( tryMoveFigure( m_seletedFigure, m_selector->getTile() ) ) {
-					flushSelectedFigure();
-				} else {
-					updateSelection();
-				}
-			} else {
-				updateSelection();
-			}
+			handleSelection();
 		}
 
 	} else if ( const Pos* pos = msg.fetch<Pos>( MsgTypes::LeftClick ) ) {
@@ -139,18 +158,14 @@ void Game::input(const Msg& msg) {
 		Pos tileSize = m_board->getTileSize();
 		const Tile_p& tile = m_board->getTile( { winPos[0] / tileSize[0], winPos[1] / tileSize[1] } );
 		m_board->move( m_selector, *tile);
-		if ( m_seletedFigure && tryMoveFigure( m_seletedFigure, tile ) ) {
-			flushSelectedFigure();
-		} else {
-			updateSelection();
-		}
+		handleSelection();
 	}
-	// TODO: distribute to sub elements
 }
 bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
 	for ( const std::shared_ptr<Marked>& mark : m_moves ) {
 		if ( mark->getTile() == tile ) {
 			m_board->move( fig, *tile );
+			// TODO: enemy movment
 			return true;
 		}
 	}

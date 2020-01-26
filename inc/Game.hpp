@@ -17,6 +17,7 @@ public:
 	bool running();
 	void input(const Msg& msg);
 private:
+	void handleSelection();
 	void updateSelection();
 	void flushSelectedFigure();
 	bool tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile );

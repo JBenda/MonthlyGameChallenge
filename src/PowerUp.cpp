@@ -36,3 +36,19 @@ std::u8string_view Konter::getPrint( const Pos& size ) {
 	}
 	return u8"";
 }
+
+Pos PowerUp::printInfo( WINDOW* wnd, const Pos& tl, const Pos& br ) const {
+	const std::string_view description = getDescription();
+	if ( !getTile() ) {
+		wmove( wnd, tl[1], tl[0] );
+		waddstr( wnd,  description.data());
+		return tl + Pos( 0, 1 );
+	} else {
+		wmove( wnd, tl[1], tl[0] );
+		wprintw( wnd, "PowerUp: %s", getName().data() );
+		wmove( wnd, tl[1] + 1, tl[0] + 2 );
+		waddstr( wnd, getDescription().data() );
+		return tl + Pos( 0, 2 );
+	}
+}
+

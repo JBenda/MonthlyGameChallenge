@@ -9,8 +9,7 @@
 
 #include "config.hpp"
 
-// constexpr std::array<Pos, 3> SupportedTieldSizes = { { {14,7}, {6,3}, {2,1} } };
-constexpr std::array<Pos, 2> SupportedTieldSizes = { { {5,3}, {2,1} } };
+constexpr std::array<Pos, 2> SupportedTieldSizes = { { {14,7}, {5,3},} };
 
 enum class STEPS { NO = 0, YES = 0b1, BLOCKING = 0b11};
 template<typename T>
@@ -56,7 +55,7 @@ private:
 class Object {
 	friend class Tile;
 	friend class Board;
-	void setTile(const Tile_p& tile) {
+	void setTile(const Tile_p& tile) const {
 		m_tile = tile;
 	}
 public:
@@ -69,13 +68,14 @@ public:
 	const OBJECT getObjectType() const { return m_objT; }
 	/// @return false if obj shoudl be deleted
 	virtual bool onCollision( const Obj_p& obj ) { throw std::string("no collision behavior defined!"); };
+	virtual Pos printInfo( WINDOW* wnd, const Pos& tl, const Pos& br ) const { throw std::string("can't print info"); };
 protected:
 	Object() = default;
 	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
 private:
 	LAYER m_layer {LAYER::None};
 	OBJECT m_objT {OBJECT::None};
-	std::weak_ptr<Tile> m_tile {};
+	mutable std::weak_ptr<Tile> m_tile {};
 	std::size_t m_power{0};
 };
 class Tile : public std::enable_shared_from_this<Tile> {
@@ -91,6 +91,7 @@ public:
 	const Obj_p& getLayer( const LAYER layer ) const;
 	const Obj_p& getObjet() const { return getLayer( LAYER::Object ); }
 	STEPS tryMove( const Object& obj ) const;
+	void printInfo( WINDOW* wnd ) const;
 private:
 	std::set<Obj_p, Object::less> m_objs;
 	std::array<Tile_p, 9> m_neighbors = {

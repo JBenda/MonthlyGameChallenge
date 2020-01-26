@@ -11,6 +11,14 @@ using Power_p = std::shared_ptr<PowerUp>;
 
 
 class Figure : public Object{
+	std::string_view getFractionName( FRACTION fraction ) const {
+		switch ( fraction ) {
+		case FRACTION::NORMAL:
+			return "Normal";
+		case FRACTION::PLAYER:
+			return "Player";
+		}
+	}
 public:
 	Figure( FRACTION fraction ) : Object{ LAYER::Object, OBJECT::Figure }, _fraction{fraction}{}
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
@@ -19,6 +27,7 @@ public:
 	bool onCollision( const Obj_p& obj ) override;
 	void addPowerUp( const Power_p& powerup );
 	void removePowerUp( const Power_p& powerup );
+	Pos printInfo( WINDOW* wnd, const Pos& tl, const Pos& br ) const override;
 protected:
 
 	class PrintIterator;
@@ -44,8 +53,9 @@ protected:
 		int m_lvl{ -1 };
 	};
 private:
-	virtual std::u8string_view getPrint( const Pos& size ) = 0;
+	virtual std::u8string_view getPrint( const Pos& size ) const = 0;
 	virtual void setMovments( std::vector<Tile_w>& movList ) const = 0;
+	virtual std::string_view getName() const = 0;
 	FRACTION _fraction{ FRACTION::NORMAL };
 	std::vector<Tile_w> m_targets{};
 	std::vector<Power_p> m_powerups{};
@@ -55,15 +65,27 @@ class Pawn : public Figure {
 public:
 	Pawn( FRACTION fraction ) : Figure( fraction ) {}
 private:
+	std::string_view getName() const override { return "Pawn";  }
 	void setMovments( std::vector<Tile_w>& movList ) const override;
-	std::u8string_view getPrint( const Pos& size ) override;
+	std::u8string_view getPrint( const Pos& size ) const override;
 };
 
 class Bishop : public Figure {
 public:
 	Bishop( FRACTION fraction ) : Figure( fraction ) {}
 private:
+	std::string_view getName() const override { return "Bishop"; }
 	void setMovments( std::vector<Tile_w>& movList ) const override;
-	std::u8string_view getPrint( const Pos& size ) override;
+	std::u8string_view getPrint( const Pos& size ) const override;
 };
+
+class King : public Figure {
+public:
+	using Figure::Figure;
+private:
+	std::string_view getName() const override { return "King"; }
+	void setMovments( std::vector<Tile_w>& movList ) const override;
+	std::u8string_view getPrint( const Pos& size ) const override;
+};
+
 
