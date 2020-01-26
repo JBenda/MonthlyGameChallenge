@@ -12,6 +12,7 @@ public:
 	PowerUp() : std::enable_shared_from_this<PowerUp>(), Object{ LAYER::Object, OBJECT::PowerUp }{}
 	virtual bool onCollision( const Obj_p& obj ) override { return true; }
 	virtual void modifyMovments( std::vector<Tile_w>& moves ) {}
+	virtual std::u8string_view getPrint(const Pos& size) = 0;
 protected:
 	Power_p self() { return shared_from_this(); }
 };
@@ -20,6 +21,8 @@ class Konter : public PowerUp {
 public:
 	using PowerUp::PowerUp;
 	bool onCollision( const Obj_p& obj ) override;
+	std::u8string_view getPrint( const Pos& size ) override;
+	
 private:
 	std::weak_ptr<Figure> m_figure{};
 };

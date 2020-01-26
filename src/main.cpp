@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#include <locale.h>
+#include <clocale>
 
 #include "config.hpp"
 #include "Game.hpp"
@@ -14,7 +14,7 @@ std::unique_ptr<Glob> Glob::m_instance{nullptr};
 
 int main(int argc, char *argv[])
 {
-	setlocale(LC_ALL, "");
+	std::chrono::milliseconds timespan( 1000 );
 
 	WINDOW* wnd = initscr();
 
@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
 		std::cerr << "You're terminal don't support colors, sorry\n";
 	}
 	start_color();
+
+	mvaddstr(0,0, std::setlocale( LC_ALL, "" ));
 
 	noecho();
 	cbreak();
@@ -85,7 +87,6 @@ int main(int argc, char *argv[])
 		refresh();
 	}
 	if ( !closeNormal ) {
-		std::chrono::milliseconds timespan( 1000 );
 		std::this_thread::sleep_for( timespan );
 	}
 	endwin();

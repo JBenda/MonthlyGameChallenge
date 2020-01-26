@@ -44,7 +44,7 @@ protected:
 		int m_lvl{ -1 };
 	};
 private:
-	virtual PrintArea getPrint( int const height ) = 0;
+	virtual std::u8string_view getPrint( const Pos& size ) = 0;
 	virtual void setMovments( std::vector<Tile_w>& movList ) const = 0;
 	FRACTION _fraction{ FRACTION::NORMAL };
 	std::vector<Tile_w> m_targets{};
@@ -56,7 +56,7 @@ public:
 	Pawn( FRACTION fraction ) : Figure( fraction ) {}
 private:
 	void setMovments( std::vector<Tile_w>& movList ) const override;
-	PrintArea getPrint( const int height );
+	std::u8string_view getPrint( const Pos& size ) override;
 };
 
 class Bishop : public Figure {
@@ -64,6 +64,6 @@ public:
 	Bishop( FRACTION fraction ) : Figure( fraction ) {}
 private:
 	void setMovments( std::vector<Tile_w>& movList ) const override;
-	PrintArea getPrint( const int height );
+	std::u8string_view getPrint( const Pos& size ) override;
 };
 

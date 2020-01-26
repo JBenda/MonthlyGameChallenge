@@ -9,7 +9,9 @@
 
 #include "config.hpp"
 
-constexpr std::array<Pos, 2> SupportedTieldSizes = { { {14,7}, {6,3} } };
+// constexpr std::array<Pos, 3> SupportedTieldSizes = { { {14,7}, {6,3}, {2,1} } };
+constexpr std::array<Pos, 2> SupportedTieldSizes = { { {5,3}, {2,1} } };
+
 enum class STEPS { NO = 0, YES = 0b1, BLOCKING = 0b11};
 template<typename T>
 bool isSet( T config, T flag ) {

@@ -18,19 +18,76 @@ bool Figure::onCollision( const Obj_p& obj ) {
 	return true;
 }
 
-void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
-	wmove( wnd, pos[1], pos[0] );
-	int format = winch( wnd ) & A_COLOR;
-	wattron( wnd, format );
-	int height = size[1];
-	const auto area = this->getPrint( height );
-	for ( auto itr = area.first; itr != area.second; ++itr ) {
-		int xOff = (size[0] - itr->size()) / 2;
-		wmove( wnd, pos[1] + size[1] - itr.level(), pos[0] + xOff);
-		waddstr( wnd, reinterpret_cast<const char*>(itr->data()) );
-	}
+int PDC_mbtowc( wchar_t* pwc, const char* s, size_t n ) {
+	wchar_t key;
+	int i = -1;
+	const unsigned char* string;
 
-	wattroff( wnd, format );
+	if ( !s || ( n < 1 ) )
+		return -1;
+
+	if ( !*s )
+		return 0;
+
+	string = (const unsigned char*) s;
+
+	key = string[0];
+
+	/* Simplistic UTF-8 decoder -- only does the BMP, minimal validation */
+
+	if ( key & 0x80 ) {
+		if ( ( key & 0xe0 ) == 0xc0 ) {
+			if ( 1 < n ) {
+				key = ( ( key & 0x1f ) << 6 ) | ( string[1] & 0x3f );
+				i = 2;
+			}
+		} else if ( ( key & 0xe0 ) == 0xe0 ) {
+			if ( 2 < n ) {
+				key = ( ( key & 0x0f ) << 12 ) | ( ( string[1] & 0x3f ) << 6 ) |
+					( string[2] & 0x3f );
+				i = 3;
+			}
+		}
+	} else
+		i = 1;
+
+	if ( i )
+		*pwc = key;
+
+	return i;
+}
+
+void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
+	int height = size[1];
+	std::vector<PrintArea> prints{};
+	for ( const auto& power : m_powerups ) {
+		prints.emplace_back(PrintIterator::fromPrint(power->getPrint(size)));
+	}
+	chtype input[28];
+	prints.emplace_back( PrintIterator::fromPrint( this->getPrint( size ) ) );
+	for ( const auto& area : prints ) {
+		for ( auto itr = area.first; itr != area.second; ++itr ) {
+			int len = 0;
+			for ( auto c : *itr ) {
+				if ( ( c & 0b1100'0000 ) != 0b1000'0000 ) {
+					++len;
+				}
+			}
+			if ( len > 0 ) {
+				int xOff = ( size[0] - len ) / 2;
+				wmove( wnd, pos[1] + size[1] - itr.level(), pos[0] + xOff );
+				winchnstr( wnd, input, len );
+				int off = 0;
+				for ( int i = 0; input[i] != 0; ++i) {
+					wchar_t c = 0;
+					off += PDC_mbtowc( &c, reinterpret_cast<const char*>( itr->data() + off ), itr->size() - off );
+					input[i] = ( input[i] & A_ATTRIBUTES ) | ( c & A_CHARTEXT );
+				}
+				waddchstr( wnd, input );
+				// waddstr( wnd, reinterpret_cast<const char*>(itr->data() ));
+			}
+		}
+	}
 }
 
 void Figure::addPowerUp( const Power_p& power ) {
@@ -95,23 +152,22 @@ void Pawn::setMovments( std::vector<Tile_w>& moves ) const {
 	}
 }
 
-Figure::PrintArea Pawn::getPrint( const int height ) {
-	if ( height > 5 ) {
+std::u8string_view Pawn::getPrint( const Pos& size ) {
+	if ( size[1] > 5 ) {
 		static const char8_t p[] =
 		 	 u8"()\0"
 			 u8")(\0"
 			u8"/__\\\0"
 			u8"";
-		return PrintIterator::fromPrint( { p, sizeof( p ) } );
-
+		return { p, sizeof( p ) };
 	}
-	if ( height > 2 ) {
+	if ( size[1] > 2 ) {
 		static const char8_t p[] =
 			u8"\u2659\0"
 			u8"";
-		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+		return { p, sizeof( p ) };
 	}
-	return PrintIterator::fromPrint(u8"\u2659");
+	return u8"\u2659";
 }
 
 void Bishop::setMovments( std::vector<Tile_w>& moveList ) const {
@@ -135,23 +191,23 @@ void Bishop::setMovments( std::vector<Tile_w>& moveList ) const {
 	}
 }
 
-Figure::PrintArea Bishop::getPrint( const int height ) {
-	if ( height > 5 ) {
+std::u8string_view Bishop::getPrint( const Pos& size ) {
+	if ( size[1] > 5 ) {
 		static const char8_t p[] =
 		 	 u8"()\0"
 			 u8")(\0"
 			 u8")(\0"
 			u8"/__\\\0"
 			u8"";
-		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+		return { p, sizeof( p ) };
 
 	}
-	if ( height > 2 ) {
+	if ( size[1] > 2 ) {
 		static const char8_t p[] =
 			u8"\u2657\0"
 			u8"";
-		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+		return { p, sizeof( p ) };
 	}
-	return PrintIterator::fromPrint(u8"\u2657");
+	return u8"\u2657";
 }
 

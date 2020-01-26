@@ -10,6 +10,7 @@
 
 #define NCURSES_MOUSE_VERSION
 #define _XOPEN_SOURCE_EXTENDED 1
+#define PDC_WIDE
 #include <curses.h>
 #include <string_view>
 
