@@ -105,6 +105,12 @@ Figure::PrintArea Pawn::getPrint( const int height ) {
 		return PrintIterator::fromPrint( { p, sizeof( p ) } );
 
 	}
+	if ( height > 2 ) {
+		static const char8_t p[] =
+			u8"\u2659\0"
+			u8"";
+		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+	}
 	return PrintIterator::fromPrint(u8"\u2659");
 }
 
@@ -140,6 +146,12 @@ Figure::PrintArea Bishop::getPrint( const int height ) {
 		return PrintIterator::fromPrint( { p, sizeof( p ) } );
 
 	}
-	return PrintIterator::fromPrint(u8"\u2659");
+	if ( height > 2 ) {
+		static const char8_t p[] =
+			u8"\u2657\0"
+			u8"";
+		return PrintIterator::fromPrint( { p, sizeof( p ) } );
+	}
+	return PrintIterator::fromPrint(u8"\u2657");
 }
 

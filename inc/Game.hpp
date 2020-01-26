@@ -28,5 +28,6 @@ private:
 	std::unique_ptr<Board> m_board;
 	WINDOW* m_wnd{nullptr};
 	WINDOW* m_boardWnd{nullptr};
+	WINDOW* m_infoWnd{ nullptr };
 	std::shared_ptr<Selected> m_selector{nullptr};
 };
