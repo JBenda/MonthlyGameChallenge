@@ -4,6 +4,10 @@
 #include "Board.hpp"
 
 #include <vector>
+#include <memory>
+
+class PowerUp;
+using Power_p = std::shared_ptr<PowerUp>;
 
 
 class Figure : public Object{
@@ -12,7 +16,7 @@ public:
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
 	const std::vector<Tile_w>& getMovments();
 	FRACTION getFraction() const { return _fraction; }
-	void onCollision( const Obj_p& obj ) override;
+	bool onCollision( const Obj_p& obj ) override;
 protected:
 
 	class PrintIterator;
@@ -25,6 +29,8 @@ protected:
 		const std::u8string_view& operator*() { return m_now; }
 		const std::u8string_view* operator->() { return &m_now; }
 		int level() { return m_lvl; }
+		void addPowerUp( const Power_p& powerup ) {}
+		void removePowerUp( const PowerUp* powerup ) {}
 	private:
 		PrintIterator() = default;
 		PrintIterator( const std::u8string_view& print )
@@ -42,6 +48,7 @@ private:
 	virtual void setMovments( std::vector<Tile_w>& movList ) const = 0;
 	FRACTION _fraction{ FRACTION::NORMAL };
 	std::vector<Tile_w> m_targets{};
+	std::vector<Power_p> m_powerups{};
 };
 
 class Pawn : public Figure {

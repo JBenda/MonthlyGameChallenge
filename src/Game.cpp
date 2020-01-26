@@ -17,7 +17,7 @@ constexpr std::array<std::string_view, 20> Alphs = {
 void loadMap(Board& board) {
 	for(int x = 0; x < 9; ++x) {
 		for(int y = 0; y < 9; ++y) {
-			Tile_p tile = (new Tile())->self();
+			Tile_p tile = std::make_shared<Tile>();
 			if (x == 0) { // left border
 				tile->addObject(std::make_shared<BgLabel>(Nums[y]));
 			} else if (y == 0) { // right border

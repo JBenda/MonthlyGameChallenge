@@ -65,7 +65,8 @@ public:
 	const Tile_p getTile() const { return std::move(m_tile.lock()); }
 	const LAYER getLayer() const { return m_layer;}
 	const OBJECT getObjectType() const { return m_objT; }
-	virtual void onCollision( const Obj_p& obj ) { throw std::string("no collision behavior defined!"); };
+	/// @return false if obj shoudl be deleted
+	virtual bool onCollision( const Obj_p& obj ) { throw std::string("no collision behavior defined!"); };
 protected:
 	Object() = default;
 	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
@@ -75,11 +76,9 @@ private:
 	std::weak_ptr<Tile> m_tile {};
 	std::size_t m_power{0};
 };
-class Tile {
+class Tile : public std::enable_shared_from_this<Tile> {
 public:
-	Tile();
-	~Tile() {}
-	Tile_p self() { return m_self; }
+	Tile_p self() { return shared_from_this(); }
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size); 
 	static void link(
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
@@ -91,7 +90,6 @@ public:
 	const Obj_p& getObjet() const { return getLayer( LAYER::Object ); }
 	STEPS tryMove( const Object& obj ) const;
 private:
-	std::shared_ptr<Tile> m_self;
 	std::set<Obj_p, Object::less> m_objs;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,

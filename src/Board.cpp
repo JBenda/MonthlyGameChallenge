@@ -6,9 +6,6 @@
 void Object::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 }
 
-
-Tile::Tile() : m_self(Tile_p(this)){ }
-
 void Tile::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 	for( const Obj_p& obj : m_objs) {
 		obj->draw(wnd, pos, size);
@@ -23,13 +20,18 @@ void Tile::link(
 
 void Tile::addObject(const Obj_p& obj) {
 	auto itr = m_objs.find( obj );
+	bool insert = true;
 	if ( itr != m_objs.end() ) {
-		( *itr )->onCollision( obj );
+		insert = ( *itr )->onCollision( obj );
 	}
-	if(!m_objs.insert(obj).second) {
-		throw std::string("layer collision!");
+	if( insert ) {
+		if ( !m_objs.insert( obj ).second ) {
+			throw std::string( "layer collision!" );
+		}
+		obj->setTile( shared_from_this() );
+	} else {
+		obj->setTile( nullptr );
 	}
-	obj->setTile(m_self);
 }
 
 const Tile_p* Board::getTileEx(const Pos& pos) {

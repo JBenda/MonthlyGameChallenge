@@ -1,12 +1,13 @@
 #include "Figures.hpp"
 
-void Figure::onCollision( const Obj_p& obj ) {
+bool Figure::onCollision( const Obj_p& obj ) {
 	if ( obj->getObjectType() == OBJECT::Figure ) {
 		const Figure& figure = static_cast<const Figure&>( *obj );
 		if ( static_cast<const Figure&>( *this ).getFraction() != figure.getFraction() ) {
 			getTile()->removeObject( *this );
 		}
 	}
+	return true;
 }
 
 void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
