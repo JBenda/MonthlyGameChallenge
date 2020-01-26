@@ -17,6 +17,8 @@ public:
 	const std::vector<Tile_w>& getMovments();
 	FRACTION getFraction() const { return _fraction; }
 	bool onCollision( const Obj_p& obj ) override;
+	void addPowerUp( const Power_p& powerup );
+	void removePowerUp( const Power_p& powerup );
 protected:
 
 	class PrintIterator;
@@ -29,8 +31,6 @@ protected:
 		const std::u8string_view& operator*() { return m_now; }
 		const std::u8string_view* operator->() { return &m_now; }
 		int level() { return m_lvl; }
-		void addPowerUp( const Power_p& powerup ) {}
-		void removePowerUp( const PowerUp* powerup ) {}
 	private:
 		PrintIterator() = default;
 		PrintIterator( const std::u8string_view& print )

@@ -1,6 +1,7 @@
 #include "Game.hpp"
 #include "Figures.hpp"
 #include "Layer.hpp"
+#include "PowerUp.hpp"
 #include <array>
 #include <string_view>
 
@@ -69,7 +70,8 @@ Game::Game(WINDOW* wnd) :
 	m_board = std::make_unique<Board>(tileSize);
 	loadMap(*m_board);
 
-	m_board->getTile({4,4})->addObject(std::make_shared<Pawn>(FRACTION::NORMAL));
+	m_board->getTile({5,4})->addObject(std::make_shared<Pawn>(FRACTION::NORMAL));
+	m_board->getTile( { 4,2 } )->addObject( std::make_shared<Konter>() );
 	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>(FRACTION::PLAYER) );
 	m_board->getTile({2,2})->addObject(std::make_shared<Pawn>(FRACTION::PLAYER));
 	m_board->getTile( { 1,1 } )->addObject( m_selector );

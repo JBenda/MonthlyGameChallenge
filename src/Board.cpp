@@ -4,6 +4,7 @@
 #include <algorithm>
 
 void Object::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
+	mvwaddch( wnd, pos[1], pos[0], 'O' );
 }
 
 void Tile::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
@@ -44,10 +45,13 @@ STEPS Tile::tryMove( const Object& obj ) const {
 	Obj_w objOnTile = getObjet();
 	if ( objOnTile.expired() ) return STEPS::YES;
 	const Object& objOnT = *( objOnTile.lock() );
-	if ( obj.getObjectType() == OBJECT::Figure
-		 && objOnT.getObjectType() == OBJECT::Figure) {
-		if ( static_cast<const Figure&>( obj ).getFraction() != static_cast<const Figure&>( objOnT ).getFraction() ) {
+	if ( obj.getObjectType() == OBJECT::Figure) {
+		if (   objOnT.getObjectType() == OBJECT::Figure
+			&& static_cast<const Figure&>( obj ).getFraction() != static_cast<const Figure&>( objOnT ).getFraction() ) {
 			return STEPS::BLOCKING;
+		}
+		if ( objOnT.getObjectType() == OBJECT::PowerUp ) {
+			return STEPS::BLOCKING; // TODO: power ups == blocking?
 		}
 	}
 	return STEPS::NO;

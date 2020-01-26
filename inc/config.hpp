@@ -55,7 +55,7 @@ constexpr float FrameDuration = 1.f / 10.f;
 constexpr float MaxTimeFrame = 0.5f;
 
 enum class LAYER { None, Background, Highlight, Marked, Object };
-enum class OBJECT { None, Figure, Highlight };
+enum class OBJECT { None, Figure, Highlight, PowerUp };
 enum class FRACTION {PLAYER, NORMAL};
 
 template<typename T, std::size_t N>

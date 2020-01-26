@@ -1,6 +1,14 @@
 #include "Figures.hpp"
+#include "PowerUp.hpp"
 
 bool Figure::onCollision( const Obj_p& obj ) {
+	bool alive = true;
+	for ( const auto& power : m_powerups ) {
+		alive = power->onCollision( obj ) ? alive : false;
+	}
+	if ( !alive ) {
+		return false;
+	}
 	if ( obj->getObjectType() == OBJECT::Figure ) {
 		const Figure& figure = static_cast<const Figure&>( *obj );
 		if ( static_cast<const Figure&>( *this ).getFraction() != figure.getFraction() ) {
@@ -23,6 +31,19 @@ void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 	}
 
 	wattroff( wnd, format );
+}
+
+void Figure::addPowerUp( const Power_p& power ) {
+	m_powerups.emplace_back(power);
+}
+
+void Figure::removePowerUp( const Power_p& power ) {
+	for ( auto itr = m_powerups.begin(); itr != m_powerups.end(); ++itr ) {
+		if ( *itr == power ) {
+			m_powerups.erase(itr);
+			return;
+		}
+	}
 }
 
 Figure::PrintArea Figure::PrintIterator::fromPrint( const std::u8string_view& print ) {
@@ -57,6 +78,18 @@ void Pawn::setMovments( std::vector<Tile_w>& moves ) const {
 		const Tile_p& next = getTile()->getNeighbor( Directions.up );
 		STEPS step = next->tryMove( *this );
 		if ( isSet( step, STEPS::YES ) && !isSet( step, STEPS::BLOCKING ) ) {
+			moves.push_back( next );
+		}
+	} {
+		const Tile_p& next = getTile()->getNeighbor( Directions.up + Directions.left );
+		STEPS step = next->tryMove( *this );
+		if ( isSet( step, STEPS::BLOCKING ) ) {
+			moves.push_back( next );
+		}
+	} {
+		const Tile_p& next = getTile()->getNeighbor( Directions.up + Directions.right );
+		STEPS step = next->tryMove( *this );
+		if ( isSet( step, STEPS::BLOCKING ) ) {
 			moves.push_back( next );
 		}
 	}
