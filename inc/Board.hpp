@@ -46,6 +46,15 @@ public:
 	void setTile(const Pos& pos, const Tile_p& tile);
 	const Tile_p& getTile(const Pos& pos);
 
+	const Pos& getPosition( const Tile& tile ) {
+		for ( auto itr = m_map.begin(); itr != m_map.end(); ++itr ) { 
+			if ( itr->second.get() == &tile ) {
+				return itr->first;
+			}
+		}
+		throw std::string("tile don't exist at this board");
+	}
+
 	void draw(WINDOW* wnd);
 private:
 	Map_t m_map;
@@ -63,6 +72,8 @@ public:
 		bool operator() (const Obj_p& l_h, const Obj_p& r_h) const; 
 	};
 	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
+	void drawIfNotAnimated( WINDOW* wnd, const Pos& pos, const Pos& size ) { if ( !m_inAnimation ) { draw( wnd, pos, size ); } }
+	void setInAnimation( bool state ) { m_inAnimation = state; }
 	const Tile_p getTile() const { return std::move(m_tile.lock()); }
 	const LAYER getLayer() const { return m_layer;}
 	const OBJECT getObjectType() const { return m_objT; }
@@ -73,6 +84,7 @@ protected:
 	Object() = default;
 	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
 private:
+	bool m_inAnimation{false};
 	LAYER m_layer {LAYER::None};
 	OBJECT m_objT {OBJECT::None};
 	mutable std::weak_ptr<Tile> m_tile {};
@@ -80,6 +92,7 @@ private:
 };
 class Tile : public std::enable_shared_from_this<Tile> {
 public:
+	Tile( bool canStep = true ) : m_canStep{ canStep } {}
 	Tile_p self() { return shared_from_this(); }
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size); 
 	static void link(
@@ -93,6 +106,7 @@ public:
 	STEPS tryMove( const Object& obj ) const;
 	void printInfo( WINDOW* wnd ) const;
 private:
+	bool m_canStep{true};
 	std::set<Obj_p, Object::less> m_objs;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,

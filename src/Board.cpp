@@ -9,7 +9,7 @@ void Object::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 
 void Tile::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 	for( const Obj_p& obj : m_objs) {
-		obj->draw(wnd, pos, size);
+		obj->drawIfNotAnimated(wnd, pos, size);
 	}
 }
 
@@ -42,6 +42,7 @@ const Tile_p* Board::getTileEx(const Pos& pos) {
 }
 
 STEPS Tile::tryMove( const Object& obj ) const {
+	if ( !m_canStep ) return STEPS::NO;
 	Obj_w objOnTile = getObjet();
 	if ( objOnTile.expired() ) return STEPS::YES;
 	const Object& objOnT = *( objOnTile.lock() );

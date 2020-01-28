@@ -18,7 +18,7 @@ constexpr std::array<std::string_view, 20> Alphs = {
 void loadMap(Board& board) {
 	for(int x = 0; x < 9; ++x) {
 		for(int y = 0; y < 9; ++y) {
-			Tile_p tile = std::make_shared<Tile>();
+			Tile_p tile = std::make_shared<Tile>(x != 0 && y != 0);
 			if (x == 0) { // left border
 				tile->addObject(std::make_shared<BgLabel>(Nums[y]));
 			} else if (y == 0) { // right border
@@ -38,13 +38,14 @@ void loadMap(Board& board) {
 
 void Game::draw() {
 	m_board->draw(m_boardWnd);
+	m_animator.draw( m_boardWnd );
 	m_selector->getTile()->printInfo( m_infoWnd );
 	wnoutrefresh(m_boardWnd);
 	wnoutrefresh( m_infoWnd );
-	wnoutrefresh(m_wnd);
 }
 
 void Game::update(const std::chrono::duration<float>& dt) {
+	m_animator.update( dt );
 }
 
 bool Game::running() { 
@@ -57,17 +58,17 @@ Game::Game(WINDOW* wnd) :
 	m_wnd{wnd},
 	m_selector{ std::make_shared<Selected>() }{
 	const Pos wndSize = getWndSize(wnd);
-	Pos tileSize( (wndSize[0] - 10) / 9, (wndSize[1] - 5) / 9);
+	m_tileSize = Pos( (wndSize[0] - 10) / 9, (wndSize[1] - 5) / 9);
 	for ( const Pos& size : SupportedTieldSizes ) {
-		if ( size[0] <= tileSize[0] && size[1] <= tileSize[1] ) {
-			tileSize = size;
+		if ( size[0] <= m_tileSize[0] && size[1] <= m_tileSize[1] ) {
+			m_tileSize = size;
 			break;
 		}
 	}
-	if(wndSize[0] < tileSize[0]*9 || wndSize[1] < tileSize[1]*9) 
+	if(wndSize[0] < m_tileSize[0]*9 || wndSize[1] < m_tileSize[1]*9) 
 		throw std::string("Window to small");
 	const Pos boardSize( 9,9);
-	const Pos boardWinSize( boardSize[0] * tileSize[0], boardSize[1] * tileSize[1] );
+	const Pos boardWinSize( boardSize[0] * m_tileSize[0], boardSize[1] * m_tileSize[1] );
 	Pos infoWinSize, infoWinPos;
 	if ( wndSize[0] - boardWinSize[0] < 20 ) {
 		infoWinPos = { 0,0 };
@@ -80,7 +81,7 @@ Game::Game(WINDOW* wnd) :
 	m_boardWnd = subwin(m_wnd, boardWinSize[1],boardWinSize[0], 0,0); 
 	m_infoWnd = subwin( m_wnd, infoWinSize[1], infoWinSize[0], infoWinPos[1], infoWinPos[0] );
 
-	m_board = std::make_unique<Board>(tileSize);
+	m_board = std::make_unique<Board>(m_tileSize);
 	loadMap(*m_board);
 
 	m_board->getTile({5,4})->addObject(std::make_shared<Pawn>(FRACTION::NORMAL));
@@ -149,7 +150,7 @@ void Game::input(const Msg& msg) {
 			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
-		} else if ( *key == '\r') {
+		} else if ( *key == '\r' && acceptInput()) {
 			handleSelection();
 		}
 
@@ -164,6 +165,11 @@ void Game::input(const Msg& msg) {
 bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
 	for ( const std::shared_ptr<Marked>& mark : m_moves ) {
 		if ( mark->getTile() == tile ) {
+			m_animator.addAnimation( 
+				Animator::Animation( 
+					{ m_board->getPosition( *fig->getTile() ), m_tileSize }, 
+					{ m_board->getPosition( *tile ) , m_tileSize }, 
+					std::chrono::seconds( 1 ), fig ) );
 			m_board->move( fig, *tile );
 			// TODO: enemy movment
 			return true;
