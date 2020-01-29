@@ -91,9 +91,15 @@ struct Vec : public std::array<T,N>{
 		sub(res, v);
 		return res;
 	}
-	constexpr Vec<T,N> operator*(T s) const {
+	template<typename S>
+	constexpr Vec<T,N> operator*(S s) const {
 		Vec<T,N> res = *this;
 		scal(res, s);
+		return res;
+	}
+	constexpr Vec<T, N> scale( const Vec<T, N>& v ) const {
+		Vec<T, N> res = *this;
+		scal( res, v );
 		return res;
 	}
 
@@ -120,11 +126,18 @@ private:
 			sub<I-1>(r,v);
 		}
 	}
-	template<std::size_t I = N-1>
-	constexpr void scal(Vec<T,N>& r, T s) const {
-		std::get<I>(r) *= s;
+	template<typename S, std::size_t I = N-1>
+	constexpr void scal(Vec<T,N>& r, S s) const {
+		std::get<I>(r) = static_cast<T>(static_cast<S>(std::get<I>(r)) * s);
 		if constexpr (I>0) {
-			scal<I-1>(r,s);
+			scal<S, I-1>(r,s);
+		}
+	}
+	template<std::size_t I = N-1>
+	constexpr void scal( Vec<T, N>& r, const Vec<T, N>& s ) const {
+		std::get<I>( r ) *= std::get<I>( s );
+		if constexpr ( I > 0 ) {
+			scal<I - 1>( r, s );
 		}
 	}
 };
@@ -188,4 +201,15 @@ inline Pos getWndSize(WINDOW* wnd) {
 	Pos wndSize;
 	getmaxyx(wnd, wndSize[1], wndSize[0]);
 	return wndSize;
+}
+
+namespace std {
+	template<typename T, std::size_t N>
+	Vec<T, N> lerp( const Vec<T, N>& a, const Vec<T, N>& b, float t ) {
+		Vec<T, N> res = a;
+		Vec<T,N> diff = ( b - a );
+		diff = diff * t;
+		res = a + diff;
+		return res;
+	}
 }

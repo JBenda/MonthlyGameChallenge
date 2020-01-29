@@ -167,10 +167,11 @@ bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile
 		if ( mark->getTile() == tile ) {
 			m_animator.addAnimation( 
 				Animator::Animation( 
-					{ m_board->getPosition( *fig->getTile() ), m_tileSize }, 
-					{ m_board->getPosition( *tile ) , m_tileSize }, 
-					std::chrono::seconds( 1 ), fig ) );
-			m_board->move( fig, *tile );
+					{ m_board->getPosition( *fig->getTile() ).scale(m_tileSize), m_tileSize }, 
+					{ m_board->getPosition( *tile ).scale(m_tileSize) , m_tileSize }, 
+					std::chrono::milliseconds( 500 ), fig,
+					[&board = *m_board, fig, &tile = *tile](){ board.move( fig, tile ); } ) );
+			m_animator.addBarrier();
 			// TODO: enemy movment
 			return true;
 		}
