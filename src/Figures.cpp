@@ -253,9 +253,9 @@ void King::setMovments( std::vector<Tile_w>& movList ) const {
 std::u8string_view King::getPrint( const Pos& size ) const {
 	if ( size[1] > 5 ) {
 		static const char8_t p[] =
-			u8"(+)\0"
-			u8")(\0"
-			u8")(\0"
+			u8"(++)\0"
+		   u8"\\  /\0"
+			 u8")(\0"
 			u8"/__\\\0"
 			u8"";
 		return { p, sizeof( p ) };
@@ -269,3 +269,14 @@ std::u8string_view King::getPrint( const Pos& size ) const {
 	}
 	return u8"\u2654";
 }
+
+Tile_w King::getMove() { return Tile_w{}; }
+Tile_w Pawn::getMove() { 
+	std::vector<Tile_w> moves;
+	setMovments( moves );
+	if ( moves.size() > 0 ) {
+		return moves.back();
+	}
+	return Tile_w{};
+}
+Tile_w Bishop::getMove() { return Tile_w{}; }

@@ -17,12 +17,16 @@ class Figure : public Object{
 			return "Normal";
 		case FRACTION::PLAYER:
 			return "Player";
+		default:
+			throw std::string("fraction has no Name!");
 		}
 	}
 public:
 	Figure( FRACTION fraction ) : Object{ LAYER::Object, OBJECT::Figure }, _fraction{fraction}{}
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
 	const std::vector<Tile_w>& getMovments();
+	/// @brief used for KI
+	virtual Tile_w getMove() = 0;
 	FRACTION getFraction() const { return _fraction; }
 	bool onCollision( const Obj_p& obj ) override;
 	void addPowerUp( const Power_p& powerup );
@@ -64,6 +68,7 @@ private:
 class Pawn : public Figure {
 public:
 	Pawn( FRACTION fraction ) : Figure( fraction ) {}
+	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "Pawn";  }
 	void setMovments( std::vector<Tile_w>& movList ) const override;
@@ -73,6 +78,7 @@ private:
 class Bishop : public Figure {
 public:
 	Bishop( FRACTION fraction ) : Figure( fraction ) {}
+	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "Bishop"; }
 	void setMovments( std::vector<Tile_w>& movList ) const override;
@@ -82,6 +88,7 @@ private:
 class King : public Figure {
 public:
 	using Figure::Figure;
+	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "King"; }
 	void setMovments( std::vector<Tile_w>& movList ) const override;

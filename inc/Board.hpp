@@ -29,7 +29,6 @@ using Obj_w = std::weak_ptr<Object>;
 
 class Board {
 	using Map_t = std::unordered_map<Pos, std::shared_ptr<Tile>>;
-	void rewrite(const Pos& pos, const Tile_p& tile);
 	/*
 	 * @brief return Tile pointer or nullptr 
 	 */

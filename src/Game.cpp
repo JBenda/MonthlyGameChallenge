@@ -84,7 +84,9 @@ Game::Game(WINDOW* wnd) :
 	m_board = std::make_unique<Board>(m_tileSize);
 	loadMap(*m_board);
 
-	m_board->getTile({5,4})->addObject(std::make_shared<Pawn>(FRACTION::NORMAL));
+	std::shared_ptr<Figure> figure = std::make_shared<Pawn>( FRACTION::NORMAL );
+	m_board->getTile({5,4})->addObject(figure);
+	m_nonPlayerFigures.push_back( figure );
 	m_board->getTile( { 4,2 } )->addObject( std::make_shared<Konter>() );
 	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>(FRACTION::PLAYER) );
 	m_board->getTile({2,2})->addObject(std::make_shared<Pawn>(FRACTION::PLAYER));
@@ -104,8 +106,9 @@ void Game::updateSelection() {
 	const Obj_p& obj = m_selector->getTile()->getObjet();
 	if ( obj && obj->getObjectType() == OBJECT::Figure ) {
 		flushSelectedFigure();
-		m_seletedFigure = std::static_pointer_cast<Figure>( obj );
-		const std::vector<Tile_w>& moves = m_seletedFigure->getMovments();
+		auto pFigure = std::static_pointer_cast<Figure>( obj );
+		m_seletedFigure = pFigure;
+		const std::vector<Tile_w>& moves = pFigure->getMovments();
 		for ( const Tile_w& tile : moves ) {
 			m_moves.push_back( std::make_shared<Marked>() );
 			tile.lock()->addObject( m_moves.back() );
@@ -114,9 +117,11 @@ void Game::updateSelection() {
 }
 
 void Game::handleSelection() {
-	if ( m_seletedFigure ) {
-		if ( m_seletedFigure->getFraction() == FRACTION::PLAYER && tryMoveFigure( m_seletedFigure, m_selector->getTile() ) ) {
+	if ( !m_seletedFigure.expired() ) {
+		auto pFigure = m_seletedFigure.lock();
+		if ( pFigure->getFraction() == FRACTION::PLAYER && tryMoveFigure( pFigure, m_selector->getTile() ) ) {
 			flushSelectedFigure();
+			autoMovments();
 		} else {
 			flushSelectedFigure();
 			updateSelection();
@@ -132,22 +137,22 @@ void Game::input(const Msg& msg) {
 			m_exit = true;
 		} else if ( *key == KEY_RIGHT ) {
 			Board::tryMove(m_selector, Directions.right);
-			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
+			if ( m_seletedFigure.expired() || m_seletedFigure.lock()->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if (*key == KEY_LEFT) {
 			Board::tryMove(m_selector, Directions.left);
-			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
+			if ( m_seletedFigure.expired() || m_seletedFigure.lock()->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if ( *key == KEY_UP) {
 			Board::tryMove(m_selector, Directions.up);
-			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
+			if ( m_seletedFigure.expired() || m_seletedFigure.lock()->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if ( *key == KEY_DOWN) {
 			Board::tryMove(m_selector, Directions.down);
-			if ( !m_seletedFigure || m_seletedFigure->getFraction() != FRACTION::PLAYER) {
+			if ( m_seletedFigure.expired() || m_seletedFigure.lock()->getFraction() != FRACTION::PLAYER) {
 				updateSelection();
 			}
 		} else if ( *key == '\r' && acceptInput()) {
@@ -165,16 +170,31 @@ void Game::input(const Msg& msg) {
 bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
 	for ( const std::shared_ptr<Marked>& mark : m_moves ) {
 		if ( mark->getTile() == tile ) {
-			m_animator.addAnimation( 
-				Animator::Animation( 
-					{ m_board->getPosition( *fig->getTile() ).scale(m_tileSize), m_tileSize }, 
-					{ m_board->getPosition( *tile ).scale(m_tileSize) , m_tileSize }, 
-					std::chrono::milliseconds( 500 ), fig,
-					[&board = *m_board, fig, &tile = *tile](){ board.move( fig, tile ); } ) );
-			m_animator.addBarrier();
-			// TODO: enemy movment
+			moveFigure( fig, tile );
 			return true;
 		}
 	}
 	return false;
+}
+
+void Game::moveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
+	m_animator.addAnimation( 
+		Animator::Animation( 
+			{ m_board->getPosition( *fig->getTile() ).scale(m_tileSize), m_tileSize }, 
+			{ m_board->getPosition( *tile ).scale(m_tileSize) , m_tileSize }, 
+			std::chrono::milliseconds( 500 ), fig,
+			[&board = *m_board, fig, &tile = *tile](){ board.move( fig, tile ); } ) );
+	m_animator.addBarrier();
+}
+
+void Game::autoMovments() {
+	for ( const auto& wpFigure : m_nonPlayerFigures ) {
+		if ( !wpFigure.expired() ) {
+			std::shared_ptr<Figure> figure = wpFigure.lock();
+			auto target = figure->getMove();
+			if ( !target.expired() ) {
+				moveFigure( figure, target.lock() );
+			}
+		}
+	}
 }
