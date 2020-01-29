@@ -27,8 +27,11 @@ public:
 			}
 			m_obj->setInAnimation( true );
 		}
+		void disableSameObj( const Animation& anim ) { if ( anim.m_obj.get() == m_obj.get() ) { m_disable = true; } }
+		void enable() { m_disable = false; }
 		bool isBarrier() const { return m_tStart == 0; }
 		bool isFinished() const { return isBarrier() || m_time <= decltype(m_time)::zero(); }
+		bool isEnable() const { return !m_disable; }
 		void update( const std::chrono::duration<float>& dt );
 		void draw( WINDOW* wnd ) const ;
 		void clear() { 
@@ -36,6 +39,7 @@ public:
 			if ( m_finCallback ) { m_finCallback(); }
 		}
 	private:
+		bool m_disable{ false };
 		Pos m_beginP{ 0,0 }, m_beginS{0,0};
 		Pos m_endP{ 0,0 }, m_endS{ 0,0 };
 		std::chrono::duration<float> m_time{0};
@@ -43,7 +47,7 @@ public:
 		std::shared_ptr<Object> m_obj{};
 		std::function<void( void )> m_finCallback{};
 	};
-	void addAnimation( Animation&& ) ;
+	void addAnimation( const Animation& ) ;
 	void addBarrier( std::function<void( void )>&& callback = std::function<void( void )>{} ) { addAnimation( Animation( callback ) ); }
 	bool inQueue() const { return !m_animations.empty(); }
 	void update( const std::chrono::duration<float>& dt );

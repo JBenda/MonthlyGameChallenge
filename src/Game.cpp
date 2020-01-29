@@ -87,6 +87,9 @@ Game::Game(WINDOW* wnd) :
 	std::shared_ptr<Figure> figure = std::make_shared<Pawn>( FRACTION::NORMAL );
 	m_board->getTile({5,4})->addObject(figure);
 	m_nonPlayerFigures.push_back( figure );
+	figure = std::make_shared<Bishop>( FRACTION::NORMAL );
+	m_board->getTile( { 4,6 } )->addObject( figure );
+	m_nonPlayerFigures.push_back( figure );
 	m_board->getTile( { 4,2 } )->addObject( std::make_shared<Konter>() );
 	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>(FRACTION::PLAYER) );
 	m_board->getTile({2,2})->addObject(std::make_shared<Pawn>(FRACTION::PLAYER));
@@ -120,8 +123,10 @@ void Game::handleSelection() {
 	if ( !m_seletedFigure.expired() ) {
 		auto pFigure = m_seletedFigure.lock();
 		if ( pFigure->getFraction() == FRACTION::PLAYER && tryMoveFigure( pFigure, m_selector->getTile() ) ) {
-			flushSelectedFigure();
+			m_animator.addBarrier();
 			autoMovments();
+			m_animator.addBarrier();
+			flushSelectedFigure();
 		} else {
 			flushSelectedFigure();
 			updateSelection();
@@ -178,13 +183,21 @@ bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile
 }
 
 void Game::moveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
+	Pos pTile = m_board->getPosition( *tile ).scale( m_tileSize );
 	m_animator.addAnimation( 
 		Animator::Animation( 
 			{ m_board->getPosition( *fig->getTile() ).scale(m_tileSize), m_tileSize }, 
-			{ m_board->getPosition( *tile ).scale(m_tileSize) , m_tileSize }, 
-			std::chrono::milliseconds( 500 ), fig,
-			[&board = *m_board, fig, &tile = *tile](){ board.move( fig, tile ); } ) );
-	m_animator.addBarrier();
+			{ pTile , m_tileSize }, 
+			std::chrono::milliseconds( 500 ), fig ) );
+	if ( auto pObj = tile->getObjet() ) {
+		m_animator.addAnimation(
+			Animator::Animation(
+				{ pTile, m_tileSize },
+				{ pTile, m_tileSize },
+				std::chrono::milliseconds( 1 ),
+				pObj  ));
+	}
+	m_board->move( fig, *tile );
 }
 
 void Game::autoMovments() {

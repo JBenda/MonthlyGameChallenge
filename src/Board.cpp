@@ -43,9 +43,9 @@ const Tile_p* Board::getTileEx(const Pos& pos) {
 
 STEPS Tile::tryMove( const Object& obj ) const {
 	if ( !m_canStep ) return STEPS::NO;
-	Obj_w objOnTile = getObjet();
-	if ( objOnTile.expired() ) return STEPS::YES;
-	const Object& objOnT = *( objOnTile.lock() );
+	const Obj_p& objOnTile = getObjet();
+	if ( !objOnTile ) return STEPS::YES;
+	const Object& objOnT = *( objOnTile );
 	if ( obj.getObjectType() == OBJECT::Figure) {
 		if (   objOnT.getObjectType() == OBJECT::Figure
 			&& static_cast<const Figure&>( obj ).getFraction() != static_cast<const Figure&>( objOnT ).getFraction() ) {
@@ -96,6 +96,16 @@ bool Object::less::operator()(const Obj_p& l_h, const Obj_p& r_h) const {
 		< static_cast<int>(r_h->m_layer);
 }
 
+bool Object::less::operator() ( const Obj_p& l_h, const LAYER& r_h ) const {
+	return static_cast<int>( l_h->m_layer )
+		< static_cast<int>( r_h );
+}
+
+bool Object::less::operator() ( const LAYER& l_h, const Obj_p& r_h ) const {
+	return static_cast<int>( l_h )
+		< static_cast<int>( r_h->m_layer );
+}
+
 void Tile::removeObject( const Object& obj ) {
 	for ( auto itr = m_objs.begin(); itr != m_objs.end(); ++itr ) {
 		if ( itr->get() == &obj ) {
@@ -133,10 +143,9 @@ void Board::moveOrOut(const Obj_p& obj, const Pos& dir) {
 }
 
 const Obj_p& Tile::getLayer( const LAYER layer ) const {
-	for ( const Obj_p& obj : m_objs ) {
-		if ( obj->getLayer() == layer ) {
-			return obj;
-		}
+	decltype(m_objs)::const_iterator itr = m_objs.find(layer);
+	if ( itr != m_objs.end() ) {
+		return *itr;
 	}
 	static const Obj_p obj(nullptr);
 	return obj;
@@ -151,4 +160,8 @@ void Tile::printInfo( WINDOW* wnd ) const {
 	if ( obj ) {
 		tl = obj->printInfo( wnd, tl, br );
 	}
+}
+
+void Object::setInAnimation(bool state) {
+	m_inAnimation = state; 
 }

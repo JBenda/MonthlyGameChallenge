@@ -1,6 +1,10 @@
 #include "Animator.hpp"
 
-void Animator::addAnimation( Animator::Animation&& animation ) {
+void Animator::addAnimation( const Animator::Animation& animation ) {
+	Animation newA( animation );
+	for ( auto& ani : m_animations ) {
+		newA.disableSameObj( ani );
+	}
 	m_animations.emplace_back( animation );
 }
 
@@ -9,19 +13,29 @@ void Animator::update( const std::chrono::duration<float>& dt ) {
 	for ( auto itr = m_animations.begin(); itr != m_animations.end() && !itr->isBarrier(); ++itr ) {
 		itr->update( dt );
 	}
+	bool rmBarrier = false;
 	while ( !m_animations.empty() && m_animations.front().isFinished() ) {
+		if ( m_animations.front().isBarrier() ) {
+			rmBarrier = true;
+		}
 		m_animations.front().clear();
 		m_animations.pop_front();
+	}
+	if ( rmBarrier ) {
+		for ( auto itr = m_animations.begin(); itr != m_animations.end() && !itr->isBarrier(); ++itr ) {
+			itr->enable();
+		}
 	}
 }
 
 void Animator::draw( WINDOW* wnd ) const {
 	for ( const auto& animation : m_animations ) {
-		animation.draw( wnd );
+		if ( animation.isEnable() )animation.draw( wnd );
 	}
 }
 
 void Animator::Animation::update( const std::chrono::duration<float>& dt ) {
+	m_disable = false;
 	m_time -= dt;
 }
 

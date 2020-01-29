@@ -68,11 +68,14 @@ class Object {
 	}
 public:
 	struct less {
+		using is_transparent = std::true_type;
 		bool operator() (const Obj_p& l_h, const Obj_p& r_h) const; 
+		bool operator() ( const Obj_p& l_h, const LAYER& r_h ) const;
+		bool operator() (const LAYER& l_h, const Obj_p& r_h ) const;
 	};
 	virtual void draw(WINDOW* wnd, const Pos& pos, const Pos& size);
 	void drawIfNotAnimated( WINDOW* wnd, const Pos& pos, const Pos& size ) { if ( !m_inAnimation ) { draw( wnd, pos, size ); } }
-	void setInAnimation( bool state ) { m_inAnimation = state; }
+	void setInAnimation( bool state );
 	const Tile_p getTile() const { return std::move(m_tile.lock()); }
 	const LAYER getLayer() const { return m_layer;}
 	const OBJECT getObjectType() const { return m_objT; }

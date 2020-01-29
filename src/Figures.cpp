@@ -196,8 +196,10 @@ void Bishop::setMovments( std::vector<Tile_w>& moveList ) const {
 		Directions.down + Directions.left,
 		Directions.down + Directions.right
 	};
+	const Tile_p& tTile = getTile();
+	if ( !tTile ) { return; }
 	for ( const auto& dir : dirs ) {
-		const Tile_p* next = &getTile()->getNeighbor( dir );
+		const Tile_p* next = &tTile->getNeighbor( dir );
 		if ( !(*next) ) continue;
 		STEPS step = (*next)->tryMove( *this );
 		while ( isSet( step, STEPS::YES ) ) { 
@@ -279,4 +281,20 @@ Tile_w Pawn::getMove() {
 	}
 	return Tile_w{};
 }
-Tile_w Bishop::getMove() { return Tile_w{}; }
+Tile_w Bishop::getMove() { 
+	std::vector<Tile_w> moves;
+	setMovments( moves );
+	for ( const auto& tile : moves ) {
+		if ( !tile.expired() ) {
+			auto t = tile.lock();
+			const Obj_p& obj = t->getObjet();
+			if ( obj && obj->getObjectType() == OBJECT::Figure ) {
+				return tile;
+			}
+		}
+	}
+	if ( moves.size() > 0 ) {
+		return moves.back();
+	}
+	return Tile_w{};
+}
