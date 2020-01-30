@@ -70,6 +70,7 @@ private:
 	virtual std::u8string_view getPrint( const Pos& size ) const = 0;
 	virtual void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const = 0;
 	virtual std::string_view getName() const = 0;
+	virtual std::string_view description() const { return ""; }
 	FRACTION _fraction{ FRACTION::NORMAL };
 	std::vector<Tile_w> m_targets{};
 	std::vector<Power_p> m_powerups{};
@@ -80,9 +81,12 @@ public:
 	Pawn( FRACTION fraction ) : Figure( fraction ) {}
 	Tile_w getMove() override;
 private:
-	std::string_view getName() const override { return "Pawn";  }
+	std::string_view getName() const override { return m_queen ? "Queen" : "Pawn";  }
+	std::string_view description() const override { return m_queen ? "" : "evoles to queen when reached last row."; }
 	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
 	std::u8string_view getPrint( const Pos& size ) const override;
+	void onTileChange( const Tile_w& oldTile, const Tile_p& newTile ) override;
+	bool m_queen{ false };
 };
 
 class Bishop : public Figure {

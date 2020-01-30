@@ -63,7 +63,8 @@ private:
 class Object {
 	friend class Tile;
 	friend class Board;
-	void setTile(const Tile_p& tile) const {
+	void setTile(const Tile_p& tile) {
+		onTileChange( m_tile, tile );
 		m_tile = tile;
 	}
 public:
@@ -86,22 +87,23 @@ protected:
 	Object() = default;
 	Object( LAYER layer, OBJECT objT ) : m_layer{ layer }, m_objT{ objT }, m_power{0}{}
 private:
+	virtual void onTileChange( const Tile_w& oldTile, const Tile_p& newTile ) {}
 	bool m_inAnimation{false};
 	LAYER m_layer {LAYER::None};
 	OBJECT m_objT {OBJECT::None};
-	mutable std::weak_ptr<Tile> m_tile {};
+	std::weak_ptr<Tile> m_tile {};
 	std::size_t m_power{0};
 };
 class Tile : public std::enable_shared_from_this<Tile> {
 public:
-	Tile( bool canStep = true );
+	Tile( bool canStep = true, bool promotionZone = false );
 	Tile_p self() { return shared_from_this(); }
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size); 
 	static void link(
 			const Pos& dir, const Tile_p& from, const Tile_p& to 
 		);
 	void addObject(const Obj_p& obj) ;
-	void removeObject(const Object& obj) ;
+	void removeObject(Object& obj) ;
 	const Tile_p& getNeighbor( const Pos& dir);
 	const Obj_p& getLayer( const LAYER layer ) const;
 	const Obj_p& getObjet() const { return getLayer( LAYER::Object ); }
@@ -125,7 +127,9 @@ public:
 		}
 		m_alternativeBg = obj;
 	}
+	bool isPromotionZone() const { return m_promtionZone; }
 private:
+	bool m_promtionZone{ false };
 	bool m_canStep{true};
 	Obj_p m_alternativeBg{};
 	std::set<Obj_p, Object::less> m_objs;

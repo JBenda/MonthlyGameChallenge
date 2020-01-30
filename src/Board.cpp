@@ -107,7 +107,7 @@ bool Object::less::operator() ( const LAYER& l_h, const Obj_p& r_h ) const {
 		< static_cast<int>( r_h->m_layer );
 }
 
-void Tile::removeObject( const Object& obj ) {
+void Tile::removeObject( Object& obj ) {
 	for ( auto itr = m_objs.begin(); itr != m_objs.end(); ++itr ) {
 		if ( itr->get() == &obj ) {
 			obj.setTile( {} );
@@ -171,4 +171,7 @@ void Object::setInAnimation(bool state) {
 	m_inAnimation = state; 
 }
 
-Tile::Tile( bool canStep ) : m_canStep{ canStep }, m_alternativeBg{std::make_shared<BgColor>(COLOR_BLACK)} {}
+Tile::Tile( bool canStep, bool promotionZone ) 
+	: m_canStep{ canStep }, 
+	m_promtionZone{promotionZone}, 
+	m_alternativeBg{ std::make_shared<BgColor>( COLOR_BLACK ) } {}
