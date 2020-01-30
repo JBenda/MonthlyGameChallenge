@@ -28,7 +28,7 @@ void loadMap(Board& board) {
 				if ((x+y) % 2) {
 					tile->addObject(std::make_shared<BgColor>(COLOR_MAGENTA));
 				} else {
-					tile->addObject(std::make_shared<BgColor>(COLOR_WHITE));
+					tile->addObject(std::make_shared<BgColor>(COLOR_BLACK));
 				}
 			}
 			board.setTile({x,y}, tile);
@@ -37,8 +37,10 @@ void loadMap(Board& board) {
 
 }
 
-void loadPlayerSetUp( Board& board ) {
-	board.getTile( { 4,8 } )->addObject( std::make_shared<King>( FRACTION::PLAYER ) );
+void loadPlayerSetUp( Board& board, std::weak_ptr<Figure>& king ) {
+	auto k = std::make_shared<King>( FRACTION::PLAYER );
+	king = k;
+	board.getTile( { 4,8 } )->addObject( k );
 	board.getTile( { 3,8 } )->addObject( std::make_shared<Bishop>( FRACTION::PLAYER ) );
 	board.getTile( { 5,8 } )->addObject( std::make_shared<Knight>( FRACTION::PLAYER ) );
 	board.getTile( { 6,8 } )->addObject( std::make_shared<Bishop>( FRACTION::PLAYER ) );
@@ -95,13 +97,34 @@ void Game::updateState() {
 	wprintw( m_stateWnd, "%-50s",  str.c_str());
 }
 
+void drawGameOver( WINDOW* wnd ) {
+	Pos size = getWndSize( wnd );
+	Pos tl( ( size[0] - 74 ) / 2, ( size[1] - 8) / 2 );
+	WINDOW* label = subwin( wnd, 10, 74, tl[1], tl[0]);
+	wattron( label, A_BOLD | Glob::instance().GetColorAttrib( COLOR_RED, COLOR_BLACK ) );
+	mvwaddstr( label, 0, 0, " _______  _______  _______  _______    _______           _______  _______ " );
+	mvwaddstr( label, 1, 0, "(  ____ \\(  ___  )(       )(  ____ \\  (  ___  )|\\     /|(  ____ \\(  ____ )" );
+	mvwaddstr( label, 2, 0, "| (    \\/| (   ) || () () || (    \\/  | (   ) || )   ( || (    \\/| (    )|" );
+	mvwaddstr( label, 3, 0, "| |      | (___) || || || || (__      | |   | || |   | || (__    | (____)|" );
+	mvwaddstr( label, 4, 0, "| | ____ |  ___  || |(_)| ||  __)     | |   | |( (   ) )|  __)   |     __)" );
+	mvwaddstr( label, 5, 0, "| | \\_  )| (   ) || |   | || (        | |   | | \\ \\_/ / | (      | (\\ (   " );
+	mvwaddstr( label, 6, 0, "| (___) || )   ( || )   ( || (____/\\  | (___) |  \\   /  | (____/\\| ) \\ \\__" );
+	mvwaddstr( label, 7, 0, "(_______)|/     \\||/     \\|(_______/  (_______)   \\_/   (_______/|/   \\__/" );
+	mvwaddstr( label, 9, 30, "-- press q to quite --" );
+	wnoutrefresh( label );
+}
+
 void Game::draw() {
-	m_board->draw(m_boardWnd);
-	m_animator.draw( m_boardWnd );
-	m_selector->getTile()->printInfo( m_infoWnd );
+	if (m_king.expired()) {
+		drawGameOver( m_boardWnd );
+	} else {
+		m_board->draw( m_boardWnd );
+		m_animator.draw( m_boardWnd );
+		m_selector->getTile()->printInfo( m_infoWnd );
+		updateState();
+	}
 	wnoutrefresh(m_boardWnd);
 	wnoutrefresh( m_infoWnd );
-	updateState();
 	wnoutrefresh( m_stateWnd );
 }
 
@@ -147,10 +170,12 @@ Game::Game(WINDOW* wnd) :
 
 	m_board = std::make_unique<Board>(m_tileSize);
 	loadMap(*m_board);
-	loadPlayerSetUp( *m_board );
+	loadPlayerSetUp( *m_board, m_king );
 	m_selector = std::make_shared<Selected>();
 	m_board->getTile( { 4,4 } )->addObject( m_selector );
 	nextFloor();
+
+	wattron( m_boardWnd, A_BOLD );
 }
 
 void Game::nextFloor() {
@@ -285,5 +310,4 @@ void Game::autoMovments() {
 	if ( m_nonPlayerFigures.empty() ) {
 		nextFloor();
 	}
-
 }

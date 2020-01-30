@@ -174,4 +174,4 @@ void Object::setInAnimation(bool state) {
 Tile::Tile( bool canStep, bool promotionZone ) 
 	: m_canStep{ canStep }, 
 	m_promtionZone{promotionZone}, 
-	m_alternativeBg{ std::make_shared<BgColor>( COLOR_BLACK ) } {}
+	m_alternativeBg{ std::make_shared<BgColor>( COLOR_BLUE ) } {}

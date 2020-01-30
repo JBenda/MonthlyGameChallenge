@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
 	init_color(COLOR_BLACK, 0,0,0);
 	init_color( COLOR_BLUE, 678, 847, 902 );
 	init_color( COLOR_WHITE, 888, 888, 888 );
-	init_color( COLOR_MAGENTA, 666, 666, 666 );
+	init_color( COLOR_MAGENTA, 111, 111, 111 );
+	init_color( COLOR_RED, 999, 222, 222 );
 
 	MsgQueue msgQueue{};
 

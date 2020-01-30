@@ -20,7 +20,7 @@ void Selected::draw( WINDOW* wnd, const Pos& pos, const Pos& size ) {
 }
 
 void Marked::draw( WINDOW* wnd, const Pos& pos, const Pos& size ) {
-	static const int format = Glob::instance().GetColorAttrib( COLOR_BLACK, COLOR_GREEN );
+	static const int format = Glob::instance().GetColorAttrib( COLOR_BLACK, COLOR_YELLOW );
 	wattron( wnd, format );
 	for ( int y = 1; y < size[1] - 1; ++y ) {
 		wmove( wnd, pos[1] + y, pos[0] + 2);

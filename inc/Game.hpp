@@ -46,4 +46,5 @@ private:
 	std::shared_ptr<Selected> m_selector{nullptr};
 	int m_freezCount{ 0 };
 	int m_level{ 0 };
+	std::weak_ptr<Figure> m_king{};
 };

@@ -147,9 +147,9 @@ private:
 	constexpr T sq() const {
 		T same = std::get<I>( *this ) * std::get<I>( *this );
 		if constexpr ( I > 0 ) {
-			return same;
+			return same + sq<I-1>();
 		} else {
-			return same + sq<I - 1>();
+			return same;
 		}
 	}
 };
