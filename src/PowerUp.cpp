@@ -17,6 +17,15 @@ bool Konter::onCollision( const Obj_p& obj ) {
 	return true;
 }
 
+void Konter::draw( WINDOW* wnd, const Pos& pos, const Pos& size ) {
+	Pos p = pos + ( size * 0.5f );
+	if ( size[1] > 4 ) {
+		mvwaddstr( wnd, p[1] - 1, p[0] - 2, "*  *" );
+		mvwaddstr( wnd, p[1] - 0, p[0] - 1, "**" );
+		mvwaddstr( wnd, p[1] + 1, p[0] - 2, "*  *" );
+	}
+}
+
 std::u8string_view Konter::getPrint( const Pos& size ) {
 	if ( size[1] >= 7 && size[0] >= 14 ) {
 		static const char8_t p[] =

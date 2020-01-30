@@ -72,18 +72,24 @@ void placeRandomFiguren( Board& board, float count, FRACTION fraction, std::vect
 	float sum = 0;
 	for ( auto& entry : spawnProp ) { sum += std::max( 0.f, entry.second ); }
 	int pices = 0;
+	int powerUps = 1;
 	do {
 		float mod = (count - static_cast<float>(pices))/ sum;
 		for ( const auto& entry : spawnProp ) {
 			const Tile_p& tile = board.getTile( entry.first );
 			if ( !tile->getObjet() && distribution( generator ) < static_cast<double>( entry.second )* mod ) {
-				std::shared_ptr<Figure> fig = distribution( generator ) > 0.5f
-					? static_cast<decltype( fig )>( std::make_shared<Bishop>( fraction ) )
-					: static_cast<decltype( fig )>( std::make_shared<Knight>( fraction ) );
-				tile->addObject( fig );
-				++pices;
-				if ( list ) {
-					list->push_back( fig );
+				if ( powerUps > 0 ) {
+					tile->addObject( std::make_shared<Konter>() );
+					--powerUps;
+				} else {
+					std::shared_ptr<Figure> fig = distribution( generator ) > 0.5f
+						? static_cast<decltype( fig )>( std::make_shared<Bishop>( fraction ) )
+						: static_cast<decltype( fig )>( std::make_shared<Knight>( fraction ) );
+					tile->addObject( fig );
+					++pices;
+					if ( list ) {
+						list->push_back( fig );
+					}
 				}
 			}
 			if ( pices > 1.5f * count ) break;
@@ -93,7 +99,7 @@ void placeRandomFiguren( Board& board, float count, FRACTION fraction, std::vect
 
 void Game::updateState() {
 	wmove( m_stateWnd, 2, 3 );
-	std::string str = std::string( "Enemy stund for: " ) + std::to_string( m_freezCount ) + " turns";
+	std::string str = std::string( "Floor: ") + std::to_string(m_level) + "\tEnemy stund for: "  + std::to_string( m_freezCount ) + " turns";
 	wprintw( m_stateWnd, "%-50s",  str.c_str());
 }
 
@@ -122,10 +128,10 @@ void Game::draw() {
 		m_animator.draw( m_boardWnd );
 		m_selector->getTile()->printInfo( m_infoWnd );
 		updateState();
+		wnoutrefresh(m_boardWnd);
+		wnoutrefresh( m_infoWnd );
+		wnoutrefresh( m_stateWnd );
 	}
-	wnoutrefresh(m_boardWnd);
-	wnoutrefresh( m_infoWnd );
-	wnoutrefresh( m_stateWnd );
 }
 
 void Game::update(const std::chrono::duration<float>& dt) {

@@ -26,6 +26,7 @@ public:
 	using PowerUp::PowerUp;
 	bool onCollision( const Obj_p& obj ) override;
 	std::u8string_view getPrint( const Pos& size ) override;
+	void draw( WINDOW* wnd, const Pos& pos, const Pos& size ) override;
 private:
 	std::string_view getDescription() const override { return "Next close range attack will be conter."; }
 	std::string_view getName() const override { return "Conter"; }
