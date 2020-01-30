@@ -43,7 +43,7 @@ public:
 	void removePowerUp( const Power_p& powerup );
 	Pos printInfo( WINDOW* wnd, const Pos& tl, const Pos& br ) const override;
 protected:
-
+	Tile_w extraxtGreedeMove( const std::vector<Tile_w>& moves );
 	class PrintIterator;
 	using PrintArea = std::pair<PrintIterator, PrintIterator>;
 	class PrintIterator {

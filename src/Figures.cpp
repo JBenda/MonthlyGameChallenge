@@ -335,22 +335,90 @@ Tile_w Pawn::getMove() {
 	}
 	return Tile_w{};
 }
+Tile_w Figure::extraxtGreedeMove(const std::vector<Tile_w>& moves) {
+	using Target_t = std::tuple<Obj_p, Tile_p, int>;
+	std::vector<Target_t> targets;
+	std::vector<int> m1to2{0};
+	std::vector<Tile_w> moves2;
+	for ( const Tile_w& wT : moves ) {
+		Tile_p pT = wT.lock();
+		if ( const auto& obj = pT->getObjet() ) {
+			targets.push_back( { obj, pT, 1 } );
+		}
+		setMovments( pT, moves2 );
+		m1to2.push_back( moves2.size() );
+	}
+	class M{
+	public:
+		M( const std::vector<Tile_w>& o, const std::vector<int>& n ) 
+			: out{o.begin()}, itr { n.begin() + 1}, end{ n.end() } {
+
+		}
+		Tile_p operator*() const { return out->lock(); }
+		operator bool() const { return itr != end; }
+		M& operator++() {
+			if ( itr == end ) { throw std::string("out of limit!"); }
+			if ( ++count == *itr ) {
+				++itr;
+				++out;
+			}
+			return *this;
+		}
+	private:
+		int count{ 0 };
+		std::vector<Tile_w>::const_iterator out;
+		std::vector<int>::const_iterator itr, end;
+	} mv1(moves, m1to2);
+	for ( const Tile_w& wT : moves2 ) {
+		Tile_p pT = wT.lock();
+		if ( const auto& obj = pT->getObjet() ) {
+			targets.push_back( { obj, *mv1, 2 } );
+		}
+		++mv1;
+	}
+	if ( targets.empty() ) { return moves.front(); }
+	struct {
+		bool operator()( const Target_t& l_h, const Target_t& r_h ) const {
+			auto pl = std::get<Tile_p>( l_h ).get(), pr = std::get<Tile_p>( r_h ).get();
+			if ( pl != pr ) { return pl > pr; }
+			auto ml = std::get<int>( l_h ), mr = std::get<int>( r_h );
+			if ( ml != mr ) { return ml > mr; }
+			auto tl = std::get<Obj_p>( l_h )->getObjectType(), tr = std::get<Obj_p>( r_h )->getObjectType();
+			return static_cast<int>( tl ) > static_cast<int>( tr );
+		}
+	} mySort;
+	std::sort( targets.begin(), targets.end(), mySort );
+	std::vector<std::array<decltype( targets )::iterator, 2>> batches{};
+	{
+		auto b = targets.begin();
+		for ( auto itr = targets.begin(); itr != targets.end(); ++itr ) {
+			if ( std::get<Tile_p>( *itr ) != std::get<Tile_p>( *b ) ) {
+				batches.push_back( {b, itr} );
+				b = itr;
+			}
+		}
+		batches.push_back( {b, targets.end()} );
+	}
+	for ( const auto& batch : batches ) { // move 1 and move 2 access
+		if ( std::get<int>(*(batch[0])) == 1 && std::get<int>(*(batch[0]))) {
+			return std::get<Tile_p>(*(batch[0]));
+		}
+	}
+	for ( const auto& batch : batches ) { // move 1 
+		if ( std::get<int>(*(batch[0])) == 1) {
+			return std::get<Tile_p>(*(batch[0]));
+		}
+	}
+	return std::get<Tile_p>(targets.front());
+}
+
 Tile_w Bishop::getMove() { 
 	const Tile_p& tile = getTile();
 	if ( tile ) {
 		std::vector<Tile_w> moves;
 		setMovments( tile, moves );
-		for ( const auto& tile : moves ) {
-			if ( !tile.expired() ) {
-				auto t = tile.lock();
-				const Obj_p& obj = t->getObjet();
-				if ( obj && obj->getObjectType() == OBJECT::Figure ) {
-					return tile;
-				}
-			}
-		}
 		if ( moves.size() > 0 ) {
-			return moves.back();
+			return extraxtGreedeMove( moves );
 		}
 	}
 	return Tile_w{};
@@ -361,7 +429,7 @@ Tile_w Knight::getMove() {
 		std::vector<Tile_w> moves;
 		setMovments( tile, moves );
 		if ( moves.size() > 0 ) {
-			return moves.back();
+			return extraxtGreedeMove( moves );
 		}
 	}
 	return Tile_w{}; 

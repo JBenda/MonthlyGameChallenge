@@ -186,8 +186,9 @@ Game::Game(WINDOW* wnd) :
 
 void Game::nextFloor() {
 	++m_level;
-	placeRandomFiguren( *m_board, m_level * 2.f, FRACTION::NORMAL, &m_nonPlayerFigures );
-	m_freezCount = m_level + 2;
+	placeRandomFiguren( *m_board, m_level * 2.f + 
+						std::max(0.f, m_level - 2.f), FRACTION::NORMAL, &m_nonPlayerFigures );
+	m_freezCount = m_level + 1;
 }
 
 void Game::flushSelectedFigure() {
