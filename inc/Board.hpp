@@ -55,6 +55,8 @@ public:
 	}
 
 	void draw(WINDOW* wnd);
+	auto begin() { return m_map.begin(); }
+	auto end() { return m_map.end(); }
 private:
 	Map_t m_map;
 	Pos m_tileSize;
@@ -128,6 +130,7 @@ public:
 		m_alternativeBg = obj;
 	}
 	bool isPromotionZone() const { return m_promtionZone; }
+	bool canStap() const { return m_canStep; }
 private:
 	bool m_promtionZone{ false };
 	bool m_canStep{true};

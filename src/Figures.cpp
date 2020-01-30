@@ -356,7 +356,16 @@ Tile_w Bishop::getMove() {
 	return Tile_w{};
 }
 
-Tile_w Knight::getMove() { return Tile_w{}; }
+Tile_w Knight::getMove() { 
+	if ( const Tile_p& tile = getTile() ) {
+		std::vector<Tile_w> moves;
+		setMovments( tile, moves );
+		if ( moves.size() > 0 ) {
+			return moves.back();
+		}
+	}
+	return Tile_w{}; 
+}
 
 void Knight::setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const {
 	constexpr std::array<Pos, 4> dirs = { Directions.up, Directions.left, Directions.down, Directions.right };

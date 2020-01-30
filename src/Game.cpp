@@ -4,6 +4,7 @@
 #include "PowerUp.hpp"
 #include <array>
 #include <string_view>
+#include <random>
 
 constexpr std::array<std::string_view, 20> Nums = {
 	"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -44,6 +45,48 @@ void loadPlayerSetUp( Board& board ) {
 	for ( int i = 3; i <= 6; ++i ) {
 		board.getTile( { i, 7 } )->addObject( std::make_shared<Pawn>( FRACTION::PLAYER ) );
 	}
+}
+
+void placeRandomFiguren( Board& board, float count, FRACTION fraction, std::vector<std::weak_ptr<Figure>>* list = nullptr) {
+	static std::mt19937 generator(time(NULL));
+	std::uniform_real_distribution distribution{};
+	std::vector<std::pair<Pos, float>> spawnProp;
+	for ( const std::pair<Pos, Tile_p>& tile : board ) {
+		if ( tile.second->canStap() && !( tile.second->getObjet() ) ) {
+			float p = 1.f;
+			for ( const Pos& dir : Directions ) {
+				if ( const Tile_p& next = tile.second->getNeighbor(dir) ) {
+					if ( next->getObjet() ) { p -= 0.2f; }
+					for ( const Pos& subD : Directions ) {
+						if ( const Tile_p& nnext = next->getNeighbor( subD ) ) {
+							if ( nnext->getObjet() ) { p -= 0.1f; }
+						}
+					}
+				}
+			}
+			spawnProp.push_back( { tile.first, p} );
+		}
+	}
+	float sum = 0;
+	for ( auto& entry : spawnProp ) { sum += std::max( 0.f, entry.second ); }
+	int pices = 0;
+	do {
+		float mod = (count - static_cast<float>(pices))/ sum;
+		for ( const auto& entry : spawnProp ) {
+			const Tile_p& tile = board.getTile( entry.first );
+			if ( !tile->getObjet() && distribution( generator ) < static_cast<double>( entry.second )* mod ) {
+				std::shared_ptr<Figure> fig = distribution( generator ) > 0.5f
+					? static_cast<decltype( fig )>( std::make_shared<Bishop>( fraction ) )
+					: static_cast<decltype( fig )>( std::make_shared<Knight>( fraction ) );
+				tile->addObject( fig );
+				++pices;
+				if ( list ) {
+					list->push_back( fig );
+				}
+			}
+			if ( pices > 1.5f * count ) break;
+		}
+	} while ( pices < count * 0.5f);
 }
 
 void Game::draw() {
@@ -96,7 +139,13 @@ Game::Game(WINDOW* wnd) :
 	loadPlayerSetUp( *m_board );
 	m_selector = std::make_shared<Selected>();
 	m_board->getTile( { 4,4 } )->addObject( m_selector );
+	nextFloor();
+}
 
+void Game::nextFloor() {
+	++m_level;
+	placeRandomFiguren( *m_board, m_level * 2.f, FRACTION::NORMAL, &m_nonPlayerFigures );
+	m_freezCount = m_level + 2;
 }
 
 void Game::flushSelectedFigure() {
@@ -205,6 +254,7 @@ void Game::moveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) 
 }
 
 void Game::autoMovments() {
+	if ( m_freezCount-- > 0 ) { return; }
 	for ( const auto& wpFigure : m_nonPlayerFigures ) {
 		if ( !wpFigure.expired() ) {
 			std::shared_ptr<Figure> figure = wpFigure.lock();
