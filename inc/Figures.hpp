@@ -36,7 +36,7 @@ public:
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
 	const std::vector<Tile_w>& getMovments();
 	/// @brief used for KI
-	virtual Tile_w getMove() = 0;
+	virtual Tile_w getMove();
 	FRACTION getFraction() const { return _fraction; }
 	bool onCollision( const Obj_p& obj ) override;
 	void addPowerUp( const Power_p& powerup );
@@ -79,7 +79,6 @@ private:
 class Pawn : public Figure {
 public:
 	Pawn( FRACTION fraction ) : Figure( fraction ) {}
-	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return m_queen ? "Queen" : "Pawn";  }
 	std::string_view description() const override { return m_queen ? "" : "evoles to queen when reached last row."; }
@@ -92,7 +91,6 @@ private:
 class Bishop : public Figure {
 public:
 	Bishop( FRACTION fraction ) : Figure( fraction ) {}
-	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "Bishop"; }
 	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
@@ -102,7 +100,6 @@ private:
 class King : public Figure {
 public:
 	using Figure::Figure;
-	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "King"; }
 	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
@@ -112,11 +109,18 @@ private:
 class Knight : public Figure {
 public:
 	using Figure::Figure;
-	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "Knight"; }
 	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
 	std::u8string_view getPrint( const Pos& size ) const override;
 };
 
+class Tower : public Figure {
+public:
+	using Figure::Figure;
+private:
+	std::string_view getName() const override { return "Tower"; }
+	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
+	std::u8string_view getPrint( const Pos& size ) const override;
+};
 

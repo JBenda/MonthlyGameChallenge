@@ -323,18 +323,6 @@ std::u8string_view King::getPrint( const Pos& size ) const {
 	return u8"\u2654";
 }
 
-Tile_w King::getMove() { return Tile_w{}; }
-Tile_w Pawn::getMove() { 
-	const Tile_p& tile = getTile();
-	if ( tile ) {
-		std::vector<Tile_w> moves;
-		setMovments( tile, moves );
-		if ( moves.size() > 0 ) {
-			return moves.back();
-		}
-	}
-	return Tile_w{};
-}
 Tile_w Figure::extraxtGreedeMove(const std::vector<Tile_w>& moves) {
 	using Target_t = std::tuple<Obj_p, Tile_p, int>;
 	std::vector<Target_t> targets;
@@ -382,7 +370,7 @@ Tile_w Figure::extraxtGreedeMove(const std::vector<Tile_w>& moves) {
 			auto pl = std::get<Tile_p>( l_h ).get(), pr = std::get<Tile_p>( r_h ).get();
 			if ( pl != pr ) { return pl > pr; }
 			auto ml = std::get<int>( l_h ), mr = std::get<int>( r_h );
-			if ( ml != mr ) { return ml > mr; }
+			if ( ml != mr ) { return ml < mr; }
 			auto tl = std::get<Obj_p>( l_h )->getObjectType(), tr = std::get<Obj_p>( r_h )->getObjectType();
 			return static_cast<int>( tl ) > static_cast<int>( tr );
 		}
@@ -400,7 +388,7 @@ Tile_w Figure::extraxtGreedeMove(const std::vector<Tile_w>& moves) {
 		batches.push_back( {b, targets.end()} );
 	}
 	for ( const auto& batch : batches ) { // move 1 and move 2 access
-		if ( std::get<int>(*(batch[0])) == 1 && std::get<int>(*(batch[0]))) {
+		if ( std::get<int>(*(batch[0])) == 1 && std::get<int>(*(batch[1] - 1)) == 2) {
 			return std::get<Tile_p>(*(batch[0]));
 		}
 	}
@@ -412,7 +400,7 @@ Tile_w Figure::extraxtGreedeMove(const std::vector<Tile_w>& moves) {
 	return std::get<Tile_p>(targets.front());
 }
 
-Tile_w Bishop::getMove() { 
+Tile_w Figure::getMove() { 
 	const Tile_p& tile = getTile();
 	if ( tile ) {
 		std::vector<Tile_w> moves;
@@ -424,16 +412,6 @@ Tile_w Bishop::getMove() {
 	return Tile_w{};
 }
 
-Tile_w Knight::getMove() { 
-	if ( const Tile_p& tile = getTile() ) {
-		std::vector<Tile_w> moves;
-		setMovments( tile, moves );
-		if ( moves.size() > 0 ) {
-			return extraxtGreedeMove( moves );
-		}
-	}
-	return Tile_w{}; 
-}
 
 void Knight::setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const {
 	constexpr std::array<Pos, 4> dirs = { Directions.up, Directions.left, Directions.down, Directions.right };
@@ -473,3 +451,42 @@ std::u8string_view Knight::getPrint( const Pos& size ) const {
 	return u8"\u2658";
 }
 
+void Tower::setMovments( const Tile_p& tile, std::vector<Tile_w>& moveList ) const {
+	static constexpr std::array<Pos, 4> dirs = {
+		Directions.up,
+		Directions.right,
+		Directions.left,
+		Directions.down
+	};
+	for ( const auto& dir : dirs ) {
+		const Tile_p* next = &tile->getNeighbor( dir );
+		if ( !( *next ) ) continue;
+		STEPS step = ( *next )->tryMove( *this );
+		while ( isSet( step, STEPS::YES ) ) {
+			moveList.push_back( *next );
+			if ( isSet( step, STEPS::BLOCKING ) ) break;
+			next = &( ( *next )->getNeighbor( dir ) );
+			if ( !( *next ) ) break;
+			step = ( *next )->tryMove( *this );
+		}
+	}
+}
+
+std::u8string_view Tower::getPrint( const Pos& size ) const {
+	if ( size[1] > 5 ) {
+		static const char8_t p[] =
+			u8"[--]\0"
+			u8"\\/\0"
+			u8"/__\\\0"
+			u8"";
+		return { p, sizeof( p ) };
+
+	}
+	if ( size[1] > 2 ) {
+		static const char8_t p[] =
+			u8"\u2656\0"
+			u8"";
+		return { p, sizeof( p ) };
+	}
+	return u8"\u2656";
+}

@@ -52,7 +52,7 @@ private:
 
 
 
-constexpr float FrameDuration = 1.f / 10.f;
+constexpr float FrameDuration = 1.f / 20.f;
 constexpr float MaxTimeFrame = 0.5f;
 
 enum class LAYER { None, Background, Highlight, Marked, Object };

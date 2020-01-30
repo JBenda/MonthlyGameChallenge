@@ -82,9 +82,16 @@ void placeRandomFiguren( Board& board, float count, FRACTION fraction, std::vect
 					tile->addObject( std::make_shared<Konter>() );
 					--powerUps;
 				} else {
-					std::shared_ptr<Figure> fig = distribution( generator ) > 0.5f
-						? static_cast<decltype( fig )>( std::make_shared<Bishop>( fraction ) )
-						: static_cast<decltype( fig )>( std::make_shared<Knight>( fraction ) );
+					using Figs = std::tuple<Tower, Knight, Bishop>;
+					int idx = distribution( generator ) * std::tuple_size_v<Figs>;
+					std::shared_ptr<Figure> fig;
+					switch ( idx ) {
+					case 0: fig = std::make_shared<std::tuple_element_t<0, Figs>>( fraction ); break;
+					case 1: fig = std::make_shared<std::tuple_element_t<1, Figs>>( fraction ); break;
+					case 2: fig = std::make_shared<std::tuple_element_t<2, Figs>>( fraction ); break;
+					default:
+						throw std::string( "unknown type!" );
+					}
 					tile->addObject( fig );
 					++pices;
 					if ( list ) {
@@ -284,7 +291,7 @@ void Game::moveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) 
 		Animator::Animation( 
 			{ pFig, m_tileSize }, 
 			{ pTile , m_tileSize }, 
-			std::chrono::milliseconds( static_cast<int>(std::sqrt(sqDistance)) * 40  ), fig ) );
+			std::chrono::milliseconds( static_cast<int>(std::sqrt(sqDistance)) * 20  ), fig ) );
 	if ( auto pObj = tile->getObjet() ) {
 		m_animator.addAnimation(
 			Animator::Animation(
