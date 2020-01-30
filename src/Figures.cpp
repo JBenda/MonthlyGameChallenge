@@ -87,7 +87,7 @@ void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 					wchar_t c = 0;
 					chtype atr = (input[i] & A_ATTRIBUTES) >> PDC_COLOR_SHIFT;
 					short fg, bg;
-					pair_content( atr, &fg, &bg );
+					pair_content( static_cast<short>(atr), &fg, &bg );
 					atr = Glob::instance().GetColorAttrib( getFractionColor(getFraction()), bg );
 					input[i] = atr | ( symboles[i] & A_CHARTEXT );
 				}
@@ -305,4 +305,44 @@ Tile_w Bishop::getMove() {
 		}
 	}
 	return Tile_w{};
+}
+
+Tile_w Knight::getMove() { return Tile_w{}; }
+
+void Knight::setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const {
+	constexpr std::array<Pos, 4> dirs = { Directions.up, Directions.left, Directions.down, Directions.right };
+	for ( const Pos& dir : dirs ) {
+		const Tile_p& up = tile->getNeighbor( dir );
+		if ( up ) {
+			const Tile_p& uup = up->getNeighbor( dir );
+			if ( uup ) {
+				const Pos left( dir[1], dir[0] );
+				const Tile_p& uupl = uup->getNeighbor( left );
+				if ( uupl && isSet( uupl->tryMove( *this ), STEPS::YES ) ) { movList.push_back( uupl ); }
+				const Pos right = left * -1 ;
+				const Tile_p& uupr = uup->getNeighbor( right );
+				if ( uupr && isSet( uupr->tryMove( *this ), STEPS::YES ) ) { movList.push_back( uupr ); }
+			}
+		}
+	}
+}
+
+std::u8string_view Knight::getPrint( const Pos& size ) const {
+	if ( size[1] > 5 ) {
+		static const char8_t p[] =
+			u8"_''\0"
+			u8"\"-=\\~\0"
+			u8")(\0"
+			u8"/__\\\0"
+			u8"";
+		return { p, sizeof( p ) };
+
+	}
+	if ( size[1] > 2 ) {
+		static const char8_t p[] =
+			u8"\u2658\0"
+			u8"";
+		return { p, sizeof( p ) };
+	}
+	return u8"\u2658";
 }

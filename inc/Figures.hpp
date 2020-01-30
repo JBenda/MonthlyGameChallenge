@@ -105,4 +105,14 @@ private:
 	std::u8string_view getPrint( const Pos& size ) const override;
 };
 
+class Knight : public Figure {
+public:
+	using Figure::Figure;
+	Tile_w getMove() override;
+private:
+	std::string_view getName() const override { return "Knight"; }
+	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
+	std::u8string_view getPrint( const Pos& size ) const override;
+};
+
 

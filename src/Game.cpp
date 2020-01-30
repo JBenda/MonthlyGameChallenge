@@ -30,13 +30,20 @@ void loadMap(Board& board) {
 					tile->addObject(std::make_shared<BgColor>(COLOR_WHITE));
 				}
 			}
-			if ( rand() > RAND_MAX * 0.6f ) {
-				tile->block();
-			}
 			board.setTile({x,y}, tile);
 		}
 	}
 
+}
+
+void loadPlayerSetUp( Board& board ) {
+	board.getTile( { 4,8 } )->addObject( std::make_shared<King>( FRACTION::PLAYER ) );
+	board.getTile( { 3,8 } )->addObject( std::make_shared<Bishop>( FRACTION::PLAYER ) );
+	board.getTile( { 5,8 } )->addObject( std::make_shared<Knight>( FRACTION::PLAYER ) );
+	board.getTile( { 6,8 } )->addObject( std::make_shared<Bishop>( FRACTION::PLAYER ) );
+	for ( int i = 3; i <= 6; ++i ) {
+		board.getTile( { i, 7 } )->addObject( std::make_shared<Pawn>( FRACTION::PLAYER ) );
+	}
 }
 
 void Game::draw() {
@@ -86,18 +93,10 @@ Game::Game(WINDOW* wnd) :
 
 	m_board = std::make_unique<Board>(m_tileSize);
 	loadMap(*m_board);
+	loadPlayerSetUp( *m_board );
+	m_selector = std::make_shared<Selected>();
+	m_board->getTile( { 4,4 } )->addObject( m_selector );
 
-	std::shared_ptr<Figure> figure = std::make_shared<Pawn>( FRACTION::NORMAL );
-	m_board->getTile({5,4})->addObject(figure);
-	m_nonPlayerFigures.push_back( figure );
-	figure = std::make_shared<Bishop>( FRACTION::NORMAL );
-	m_board->getTile( { 4,6 } )->addObject( figure );
-	m_nonPlayerFigures.push_back( figure );
-	m_board->getTile( { 4,2 } )->addObject( std::make_shared<Konter>() );
-	m_board->getTile( { 3,3 } )->addObject( std::make_shared<Bishop>(FRACTION::PLAYER) );
-	m_board->getTile({2,2})->addObject(std::make_shared<Pawn>(FRACTION::PLAYER));
-	m_board->getTile( { 1,1 } )->addObject( m_selector );
-	m_board->getTile( { 5,5 } )->addObject( std::make_shared<King>( FRACTION::PLAYER ) );
 }
 
 void Game::flushSelectedFigure() {
