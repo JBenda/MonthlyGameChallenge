@@ -29,6 +29,7 @@ private:
 	bool acceptInput() const { return !m_animator.inQueue(); }
 
 	void nextFloor();
+	void updateState();
 
 	std::vector<std::shared_ptr<Marked>> m_moves; //< moves which are allowed at the moment
 	std::weak_ptr<Figure> m_seletedFigure;
@@ -40,6 +41,7 @@ private:
 	WINDOW* m_wnd{nullptr};
 	WINDOW* m_boardWnd{nullptr};
 	WINDOW* m_infoWnd{ nullptr };
+	WINDOW* m_stateWnd{ nullptr };
 	Pos m_tileSize{1,1};
 	std::shared_ptr<Selected> m_selector{nullptr};
 	int m_freezCount{ 0 };

@@ -89,12 +89,20 @@ void placeRandomFiguren( Board& board, float count, FRACTION fraction, std::vect
 	} while ( pices < count * 0.5f);
 }
 
+void Game::updateState() {
+	wmove( m_stateWnd, 2, 3 );
+	std::string str = std::string( "Enemy stund for: " ) + std::to_string( m_freezCount ) + " turns";
+	wprintw( m_stateWnd, "%-50s",  str.c_str());
+}
+
 void Game::draw() {
 	m_board->draw(m_boardWnd);
 	m_animator.draw( m_boardWnd );
 	m_selector->getTile()->printInfo( m_infoWnd );
 	wnoutrefresh(m_boardWnd);
 	wnoutrefresh( m_infoWnd );
+	updateState();
+	wnoutrefresh( m_stateWnd );
 }
 
 void Game::update(const std::chrono::duration<float>& dt) {
@@ -123,15 +131,18 @@ Game::Game(WINDOW* wnd) :
 	const Pos boardSize( 9,9);
 	const Pos boardWinSize( boardSize[0] * m_tileSize[0], boardSize[1] * m_tileSize[1] );
 	Pos infoWinSize, infoWinPos;
+	int stateHeight = 5;
 	if ( wndSize[0] - boardWinSize[0] < 20 ) {
 		infoWinPos = { 0,0 };
 		infoWinSize = boardWinSize;
 	} else {
-		infoWinPos = { boardWinSize[0], 0 };
+		infoWinPos = { boardWinSize[0], stateHeight };
 		infoWinSize = { wndSize[0] - boardWinSize[0], boardWinSize[1] };
 	}
 
-	m_boardWnd = subwin(m_wnd, boardWinSize[1],boardWinSize[0], 0,0); 
+	m_stateWnd = subwin( m_wnd, stateHeight, wndSize[0], 0, 0 );
+	box( m_stateWnd, '|', '-' );
+	m_boardWnd = subwin(m_wnd, boardWinSize[1],boardWinSize[0], stateHeight,0); 
 	m_infoWnd = subwin( m_wnd, infoWinSize[1], infoWinSize[0], infoWinPos[1], infoWinPos[0] );
 
 	m_board = std::make_unique<Board>(m_tileSize);
@@ -254,14 +265,25 @@ void Game::moveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) 
 }
 
 void Game::autoMovments() {
-	if ( m_freezCount-- > 0 ) { return; }
-	for ( const auto& wpFigure : m_nonPlayerFigures ) {
+	if ( m_freezCount > 0 ) { --m_freezCount; return; }
+	std::vector<decltype( m_nonPlayerFigures )::iterator> expired{};
+	for ( auto itr = m_nonPlayerFigures.begin(); itr != m_nonPlayerFigures.end(); ++itr ) {
+		const std::weak_ptr<Figure>& wpFigure = *itr;
 		if ( !wpFigure.expired() ) {
 			std::shared_ptr<Figure> figure = wpFigure.lock();
 			auto target = figure->getMove();
 			if ( !target.expired() ) {
 				moveFigure( figure, target.lock() );
 			}
+		} else {
+			expired.push_back( itr );
 		}
 	}
+	for ( auto itr = expired.rbegin(); itr != expired.rend(); ++itr ) {
+		m_nonPlayerFigures.erase(*itr);
+	}
+	if ( m_nonPlayerFigures.empty() ) {
+		nextFloor();
+	}
+
 }

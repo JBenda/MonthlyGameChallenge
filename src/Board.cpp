@@ -154,7 +154,7 @@ const Obj_p& Tile::getLayer( const LAYER layer ) const {
 
 void Tile::printInfo( WINDOW* wnd ) const {
 	werase( wnd );
-	box( wnd, '-', '|' );
+	box( wnd, '|', '-' );
 	const Obj_p& obj = getObjet();
 	Pos tl( 1, 1 );
 	Pos br = getWndSize( wnd ) - Pos( 2, 2 );
