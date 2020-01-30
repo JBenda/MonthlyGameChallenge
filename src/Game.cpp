@@ -25,7 +25,7 @@ void loadMap(Board& board) {
 				tile->addObject(std::make_shared<BgLabel>(Alphs[x]));
 			} else { // field
 				if ((x+y) % 2) {
-					tile->addObject(std::make_shared<BgColor>(COLOR_CYAN));
+					tile->addObject(std::make_shared<BgColor>(COLOR_MAGENTA));
 				} else {
 					tile->addObject(std::make_shared<BgColor>(COLOR_WHITE));
 				}
@@ -186,12 +186,14 @@ bool Game::tryMoveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile
 }
 
 void Game::moveFigure( const std::shared_ptr<Figure>& fig, const Tile_p& tile ) {
+	Pos pFig = m_board->getPosition( *fig->getTile() ).scale( m_tileSize );
 	Pos pTile = m_board->getPosition( *tile ).scale( m_tileSize );
+	int sqDistance = ( pTile - pFig ).sqDistance();
 	m_animator.addAnimation( 
 		Animator::Animation( 
-			{ m_board->getPosition( *fig->getTile() ).scale(m_tileSize), m_tileSize }, 
+			{ pFig, m_tileSize }, 
 			{ pTile , m_tileSize }, 
-			std::chrono::milliseconds( 500 ), fig ) );
+			std::chrono::milliseconds( static_cast<int>(std::sqrt(sqDistance)) * 40  ), fig ) );
 	if ( auto pObj = tile->getObjet() ) {
 		m_animator.addAnimation(
 			Animator::Animation(

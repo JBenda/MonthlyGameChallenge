@@ -5,7 +5,7 @@ void Animator::addAnimation( const Animator::Animation& animation ) {
 	for ( auto& ani : m_animations ) {
 		newA.disableSameObj( ani );
 	}
-	m_animations.emplace_back( animation );
+	m_animations.emplace_back( newA );
 }
 
 void Animator::update( const std::chrono::duration<float>& dt ) {

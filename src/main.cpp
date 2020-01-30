@@ -3,6 +3,8 @@
 #include <chrono>
 #include <thread>
 
+#include <Windows.h>
+
 #include <clocale>
 
 #include "config.hpp"
@@ -16,6 +18,14 @@ int main(int argc, char *argv[])
 {
 	std::chrono::milliseconds timespan( 1000 );
 
+	SetConsoleTitle("Happy gaming :)");
+	HWND console = GetConsoleWindow();
+	RECT r;
+	GetWindowRect( console, &r );
+	HANDLE cBuffer = GetStdHandle( STD_OUTPUT_HANDLE );
+	CONSOLE_FONT_INFO font;
+	bool ret = GetCurrentConsoleFont( cBuffer, false, &font );
+	MoveWindow( console, r.left, r.top, font.dwFontSize.X * 200, font.dwFontSize.Y * 80, TRUE );
 	WINDOW* wnd = initscr();
 
 	if (has_colors() == FALSE) {
@@ -36,6 +46,8 @@ int main(int argc, char *argv[])
 
 	init_color(COLOR_BLACK, 0,0,0);
 	init_color( COLOR_BLUE, 678, 847, 902 );
+	init_color( COLOR_WHITE, 888, 888, 888 );
+	init_color( COLOR_MAGENTA, 666, 666, 666 );
 
 	MsgQueue msgQueue{};
 

@@ -102,6 +102,9 @@ struct Vec : public std::array<T,N>{
 		scal( res, v );
 		return res;
 	}
+	constexpr T sqDistance() const {
+		return sq();
+	}
 
 	std::string str() const {
 		std::string res = "[";
@@ -138,6 +141,15 @@ private:
 		std::get<I>( r ) *= std::get<I>( s );
 		if constexpr ( I > 0 ) {
 			scal<I - 1>( r, s );
+		}
+	}
+	template<std::size_t I = N-1>
+	constexpr T sq() const {
+		T same = std::get<I>( *this ) * std::get<I>( *this );
+		if constexpr ( I > 0 ) {
+			return same;
+		} else {
+			return same + sq<I - 1>();
 		}
 	}
 };

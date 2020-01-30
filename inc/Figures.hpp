@@ -21,6 +21,16 @@ class Figure : public Object{
 			throw std::string("fraction has no Name!");
 		}
 	}
+	short getFractionColor( FRACTION fraction ) const {
+		switch ( fraction ) {
+		case FRACTION::NORMAL:
+			return COLOR_RED;
+		case FRACTION::PLAYER:
+			return COLOR_GREEN;
+		default:
+			throw std::string("fraction has no color!");
+		}
+	}
 public:
 	Figure( FRACTION fraction ) : Object{ LAYER::Object, OBJECT::Figure }, _fraction{fraction}{}
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size) override;
@@ -58,7 +68,7 @@ protected:
 	};
 private:
 	virtual std::u8string_view getPrint( const Pos& size ) const = 0;
-	virtual void setMovments( std::vector<Tile_w>& movList ) const = 0;
+	virtual void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const = 0;
 	virtual std::string_view getName() const = 0;
 	FRACTION _fraction{ FRACTION::NORMAL };
 	std::vector<Tile_w> m_targets{};
@@ -71,7 +81,7 @@ public:
 	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "Pawn";  }
-	void setMovments( std::vector<Tile_w>& movList ) const override;
+	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
 	std::u8string_view getPrint( const Pos& size ) const override;
 };
 
@@ -81,7 +91,7 @@ public:
 	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "Bishop"; }
-	void setMovments( std::vector<Tile_w>& movList ) const override;
+	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
 	std::u8string_view getPrint( const Pos& size ) const override;
 };
 
@@ -91,7 +101,7 @@ public:
 	Tile_w getMove() override;
 private:
 	std::string_view getName() const override { return "King"; }
-	void setMovments( std::vector<Tile_w>& movList ) const override;
+	void setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const override;
 	std::u8string_view getPrint( const Pos& size ) const override;
 };
 

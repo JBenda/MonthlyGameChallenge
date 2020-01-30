@@ -22,7 +22,7 @@ public:
 	BgColor(short color) : 
 		Object(LAYER::Background, 
 		OBJECT::Highlight ),
-		m_format(Glob::instance().GetColorAttrib(COLOR_GREEN, color)){}
+		m_format(Glob::instance().GetColorAttrib(COLOR_RED, color)){}
 private:
 	const int m_format;
 };

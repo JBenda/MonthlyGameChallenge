@@ -85,7 +85,11 @@ void Figure::draw(WINDOW* wnd, const Pos& pos, const Pos& size) {
 				int off = 0;
 				for ( int i = 0; input[i] != 0; ++i) {
 					wchar_t c = 0;
-					input[i] = ( input[i] & A_ATTRIBUTES ) | ( symboles[i] & A_CHARTEXT );
+					chtype atr = (input[i] & A_ATTRIBUTES) >> PDC_COLOR_SHIFT;
+					short fg, bg;
+					pair_content( atr, &fg, &bg );
+					atr = Glob::instance().GetColorAttrib( getFractionColor(getFraction()), bg );
+					input[i] = atr | ( symboles[i] & A_CHARTEXT );
 				}
 				waddchstr( wnd, input );
 			}
@@ -145,25 +149,25 @@ Figure::PrintIterator& Figure::PrintIterator::operator++() {
 
 const std::vector<Tile_w>& Figure::getMovments() {
 	m_targets.resize( 0 );
-	setMovments( m_targets );
+	setMovments( getTile(), m_targets );
 	return m_targets;
 }
 
-void Pawn::setMovments( std::vector<Tile_w>& moves ) const {
+void Pawn::setMovments( const Tile_p& tile, std::vector<Tile_w>& moves ) const {
 	{
-		const Tile_p& next = getTile()->getNeighbor( Directions.up );
+		const Tile_p& next = tile->getNeighbor( Directions.up );
 		STEPS step = next->tryMove( *this );
 		if ( isSet( step, STEPS::YES ) && !isSet( step, STEPS::BLOCKING ) ) {
 			moves.push_back( next );
 		}
 	} {
-		const Tile_p& next = getTile()->getNeighbor( Directions.up + Directions.left );
+		const Tile_p& next = tile->getNeighbor( Directions.up + Directions.left );
 		STEPS step = next->tryMove( *this );
 		if ( isSet( step, STEPS::BLOCKING ) ) {
 			moves.push_back( next );
 		}
 	} {
-		const Tile_p& next = getTile()->getNeighbor( Directions.up + Directions.right );
+		const Tile_p& next = tile->getNeighbor( Directions.up + Directions.right );
 		STEPS step = next->tryMove( *this );
 		if ( isSet( step, STEPS::BLOCKING ) ) {
 			moves.push_back( next );
@@ -189,17 +193,15 @@ std::u8string_view Pawn::getPrint( const Pos& size ) const {
 	return u8"\u2659";
 }
 
-void Bishop::setMovments( std::vector<Tile_w>& moveList ) const {
+void Bishop::setMovments( const Tile_p& tile, std::vector<Tile_w>& moveList ) const {
 	static constexpr std::array<Pos, 4> dirs = {
 		Directions.up + Directions.left,
 		Directions.up + Directions.right,
 		Directions.down + Directions.left,
 		Directions.down + Directions.right
 	};
-	const Tile_p& tTile = getTile();
-	if ( !tTile ) { return; }
 	for ( const auto& dir : dirs ) {
-		const Tile_p* next = &tTile->getNeighbor( dir );
+		const Tile_p* next = &tile->getNeighbor( dir );
 		if ( !(*next) ) continue;
 		STEPS step = (*next)->tryMove( *this );
 		while ( isSet( step, STEPS::YES ) ) { 
@@ -232,7 +234,7 @@ std::u8string_view Bishop::getPrint( const Pos& size ) const {
 	return u8"\u2657";
 }
 
-void King::setMovments( std::vector<Tile_w>& movList ) const {
+void King::setMovments( const Tile_p& tile, std::vector<Tile_w>& movList ) const {
 	static constexpr std::array<Pos, 8> dirs = {
 		Directions.up,
 		Directions.up + Directions.left,
@@ -244,7 +246,7 @@ void King::setMovments( std::vector<Tile_w>& movList ) const {
 		Directions.right + Directions.up
 	};
 	for ( const auto& dir : dirs ) {
-		const Tile_p* next = &getTile()->getNeighbor( dir );
+		const Tile_p* next = &tile->getNeighbor( dir );
 		if ( !( *next ) ) continue;
 		if ( isSet( ( *next )->tryMove( *this ), STEPS::YES ) ) {
 			movList.push_back( *next );
@@ -274,27 +276,33 @@ std::u8string_view King::getPrint( const Pos& size ) const {
 
 Tile_w King::getMove() { return Tile_w{}; }
 Tile_w Pawn::getMove() { 
-	std::vector<Tile_w> moves;
-	setMovments( moves );
-	if ( moves.size() > 0 ) {
-		return moves.back();
+	const Tile_p& tile = getTile();
+	if ( tile ) {
+		std::vector<Tile_w> moves;
+		setMovments( tile, moves );
+		if ( moves.size() > 0 ) {
+			return moves.back();
+		}
 	}
 	return Tile_w{};
 }
 Tile_w Bishop::getMove() { 
-	std::vector<Tile_w> moves;
-	setMovments( moves );
-	for ( const auto& tile : moves ) {
-		if ( !tile.expired() ) {
-			auto t = tile.lock();
-			const Obj_p& obj = t->getObjet();
-			if ( obj && obj->getObjectType() == OBJECT::Figure ) {
-				return tile;
+	const Tile_p& tile = getTile();
+	if ( tile ) {
+		std::vector<Tile_w> moves;
+		setMovments( tile, moves );
+		for ( const auto& tile : moves ) {
+			if ( !tile.expired() ) {
+				auto t = tile.lock();
+				const Obj_p& obj = t->getObjet();
+				if ( obj && obj->getObjectType() == OBJECT::Figure ) {
+					return tile;
+				}
 			}
 		}
-	}
-	if ( moves.size() > 0 ) {
-		return moves.back();
+		if ( moves.size() > 0 ) {
+			return moves.back();
+		}
 	}
 	return Tile_w{};
 }
