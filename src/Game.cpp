@@ -25,10 +25,13 @@ void loadMap(Board& board) {
 				tile->addObject(std::make_shared<BgLabel>(Alphs[x]));
 			} else { // field
 				if ((x+y) % 2) {
-					tile->addObject(std::make_shared<BgColor>(COLOR_BLACK));
+					tile->addObject(std::make_shared<BgColor>(COLOR_CYAN));
 				} else {
 					tile->addObject(std::make_shared<BgColor>(COLOR_WHITE));
 				}
+			}
+			if ( rand() > RAND_MAX * 0.6f ) {
+				tile->block();
 			}
 			board.setTile({x,y}, tile);
 		}

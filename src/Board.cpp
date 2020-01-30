@@ -1,5 +1,6 @@
 #include "Board.hpp"
 #include "Figures.hpp"
+#include "Layer.hpp"
 #include <functional>
 #include <algorithm>
 
@@ -156,12 +157,18 @@ void Tile::printInfo( WINDOW* wnd ) const {
 	box( wnd, '-', '|' );
 	const Obj_p& obj = getObjet();
 	Pos tl( 1, 1 );
-	Pos br = getWndSize( wnd ) - Pos( 1, 1 );
+	Pos br = getWndSize( wnd ) - Pos( 2, 2 );
 	if ( obj ) {
-		tl = obj->printInfo( wnd, tl, br );
+		tl[1] = obj->printInfo( wnd, tl, br )[1];
 	}
+	tl += Pos( 0, 1 );
+	mvwaddstr( wnd, tl[1], tl[0], m_canStep
+			   ? ""
+			   : "not accesable Tile!");
 }
 
 void Object::setInAnimation(bool state) {
 	m_inAnimation = state; 
 }
+
+Tile::Tile( bool canStep ) : m_canStep{ canStep }, m_alternativeBg{std::make_shared<BgColor>(COLOR_BLACK)} {}

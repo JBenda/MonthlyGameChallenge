@@ -94,7 +94,7 @@ private:
 };
 class Tile : public std::enable_shared_from_this<Tile> {
 public:
-	Tile( bool canStep = true ) : m_canStep{ canStep } {}
+	Tile( bool canStep = true );
 	Tile_p self() { return shared_from_this(); }
 	void draw(WINDOW* wnd, const Pos& pos, const Pos& size); 
 	static void link(
@@ -107,8 +107,27 @@ public:
 	const Obj_p& getObjet() const { return getLayer( LAYER::Object ); }
 	STEPS tryMove( const Object& obj ) const;
 	void printInfo( WINDOW* wnd ) const;
+	void block( bool block = true ) { 
+		if ( block == m_canStep ) {
+			m_canStep = !m_canStep;
+			Obj_p obj = m_alternativeBg;
+			decltype( m_objs )::iterator bg = m_objs.find( LAYER::Background );
+			if ( bg == m_objs.end() ) {
+				throw std::string( "no background layer defined to swap with!" );
+			}
+			m_objs.erase( bg );
+			m_objs.insert(std::move(obj) );
+		}
+	}
+	void setAlternativeBack( const Obj_p& obj ) {
+		if ( obj->getLayer() != LAYER::Background ) {
+			throw std::string("only accepts Background Objects!");
+		}
+		m_alternativeBg = obj;
+	}
 private:
 	bool m_canStep{true};
+	Obj_p m_alternativeBg{};
 	std::set<Obj_p, Object::less> m_objs;
 	std::array<Tile_p, 9> m_neighbors = {
 		nullptr,nullptr,nullptr,
